@@ -1,0 +1,15 @@
+{% extends 'admin/change_form.html' %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% for tool in additional_object_tools %}
+        <li>
+            <a href="{{ tool.url }}" style="text-decoration:none;">
+                {% if tool.icon_classes %}
+                    <i class="{{ tool.icon_classes }}"></i>
+                {% endif %}
+                {{ tool.display_name }}
+            </a>
+        </li>
+    {% endfor %}
+{% endblock object-tools-items %}

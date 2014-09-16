@@ -1,0 +1,21 @@
+{% extends 'grapevine/templates/admin/change_form.html' %}
+{% load url from future %}
+
+{% block after_field_sets %}
+{% if object_id %}
+
+    {% block pre-preview %}{% endblock pre-preview %}
+
+    <table class="table table-bordered table-condensed table-striped" style="margin-top:20px;">
+        <thead>
+            <tr><th>{{ message_type_verbose }} Preview</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <iframe src="{{ preview_url }}" style="border:0; width:90%; padding:10px 5%;"></iframe>
+                </td>
+            </tr>
+    </table>
+{% endif %}
+{% endblock after_field_sets %}

@@ -1,0 +1,46 @@
+{% extends 'grapevine/templates/admin/change_sendable_form.html' %}
+
+{% block pre-preview %}
+    <table class="table table-bordered table-condensed table-striped" style="margin-top:20px;">
+        <thead>
+            <tr><th colspan="2">Meta</th></tr>
+        </thead>
+        <tbody>
+            {% if from_email %}
+                <tr style="font-size:1.2em;">
+                    <td><strong>From</strong>:</td>
+                    <td>{{ from_email }}</td>
+                </tr>
+            {% elif error_from_email %}
+                <tr style="font-size:1.2em; color:red;">
+                    <td><strong>From</strong>:</td>
+                    <td>{{ error_from_email }}</td>
+                </tr>
+            {% endif %}
+
+            {% if reply_to %}
+                <tr style="font-size:1.2em;">
+                    <td><strong>Reply To</strong>:</td>
+                    <td>{{ reply_to }}</td>
+                </tr>
+            {% elif error_reply_to %}
+                <tr style="font-size:1.2em; color:red;">
+                    <td><strong>Reply To</strong>:</td>
+                    <td>{{ error_reply_to }}</td>
+                </tr>
+            {% endif %}
+
+            {% if subject %}
+                <tr style="font-size:1.2em;">
+                    <td><strong>Subject</strong>:</td>
+                    <td>{{ subject }}</td>
+                </tr>
+            {% elif error_subject %}
+                <tr style="font-size:1.2em; color:red;">
+                    <td><strong>Subject</strong>:</td>
+                    <td>{{ error_subject }}</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock pre-preview %}

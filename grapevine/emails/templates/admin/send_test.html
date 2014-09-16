@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+
+    <style>
+        fieldset {padding:20px;}
+    </style>
+
+    <h2>Send Test</h2>
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        <fieldset class="module aligned first">
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="recipient_address">Test Recipient:</label>
+                </div>
+                <div class="controls">
+                    <input type="text" name="recipient_address" value="{{ recipients }}" />
+                    <input type="submit" class="btn btn-info" value="Send Test" style="float:right;">
+                </div>
+            </div>
+        </fieldset>
+    </form>
+
+{% endblock content %}

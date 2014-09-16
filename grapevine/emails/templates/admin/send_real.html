@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+
+    <h2>Send Real Message</h2>
+    <div id="content" class="inner-two-columns">
+        <form method="post">
+            {% csrf_token %}
+            <div class="well">
+                <h5>Are you sure you want to send this message to:</h5>
+                {% if recipients %}
+                    <ul class="list-group">
+                    {% for recipient in recipients %}
+                        <li>{{ recipient }}</li>
+                    {% endfor %}
+                    </ul>
+                    <input type="submit" class="btn btn-info" value="Send Real" >
+                {% else %}
+                    <h5>This message has no recipients.</h5>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+{% endblock content %}
