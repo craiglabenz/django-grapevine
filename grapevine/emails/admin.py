@@ -1,14 +1,16 @@
 from __future__ import unicode_literals
 
 # Django
+from django.conf import settings
 from django.contrib import admin
-from django.conf.urls import patterns, url
 from django.core.urlresolvers import reverse
 
 # Local Apps
 from grapevine.admin_base import BaseModelAdmin, SendableAdminMixin, FreezableTemplateAdminMixin
 from .models import Email, EmailRecipient, EmailBackend, EmailVariable, \
     RawEvent, Event, EmailEvent, UnsubscribedAddress
+
+IS_SUIT_AVAILBLE = "suit" in settings.INSTALLED_APPS
 
 
 class EmailableAdminMixin(SendableAdminMixin):
@@ -17,7 +19,10 @@ class EmailableAdminMixin(SendableAdminMixin):
     """
     # Used for admin display purposes
     message_type_verbose = "Email"
-    change_form_template = 'grapevine/emails/templates/admin/change_sendable_form.html'
+    if IS_SUIT_AVAILBLE:
+        change_form_template = 'grapevine/emails/templates/admin/suit_change_sendable_form.html'
+    else:
+        change_form_template = 'grapevine/emails/templates/admin/change_sendable_form.html'
 
     def get_test_recipient(self, request, obj_id):
         """

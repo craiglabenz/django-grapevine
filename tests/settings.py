@@ -6,6 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(SETTINGS_DIR))
 
 
 INSTALLED_APPS = [
+    'suit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +59,20 @@ TEMPLATE_DIRS = (
 SENDGRID_USERNAME = "username-would-go-here"
 SENDGRID_PASSWORD = "password-would-go-here"
 ######## END SENDGRID CONFIGURATION
+
+
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.request",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+    "core.context_processors.settings",
+)
 
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"

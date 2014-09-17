@@ -1,5 +1,6 @@
 Django
 django-model-utils
+django-suit
 factory-boy
 sendgrid
 tablets
