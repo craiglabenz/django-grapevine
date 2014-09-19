@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import datetime
 
 # Django
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import timezone
 
 # 3rd Party
 from grapevine.generics import EmailSendable
 from grapevine.settings import grapevine_settings
 from grapevine.emails.models import Email, EmailRecipient, \
     EmailBackend, EmailVariable, UnsubscribedAddress, RawEvent
+import tablets
 
 # Local Apps
 from core import models
@@ -278,3 +282,82 @@ class UnsubscribedTester(TestCase):
 
         self.assertEquals(RawEvent.objects.first().payload, payload)
 
+
+
+@override_settings(SHOULD_USE_BRITE_VERIFY=False, EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend')
+class GrapevineSenderTester(TestCase):
+    """
+    Testing Grapevine's abstract classes require real classes with real DB tables.
+    Thus, the unit tests for its actual message delivery code must live elsewhere.
+    """
+
+    def setUp(self):
+        super(GrapevineSenderTester, self).setUp()
+
+        tablets.models.Template.objects.create(name="Welcome Email", content="<h1>Welcome, {{ sendable.user }}!</h1>")
+
+        self.user = get_user_model().objects.create(username="asadf", email="asdf@asdf.com")
+        self.welcome_email = models.WelcomeEmail.objects.create(user=self.user)
+        # Alias
+        self.sendable = self.welcome_email
+
+        from grapevine.sender import ScheduledSendableSender
+        self.sender = ScheduledSendableSender()
+        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 1)
+
+    def test_sent_are_ineligible(self):
+        """
+        Verifies that sent messages are ineligible for resending.
+        """
+        # Send an email
+        self.sendable.send()
+        # And now the sendable must be considered ineligible
+        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+
+    def test_queued_are_ineligible(self):
+        """
+        Verifies that queued messages are ineligible for sending (other than
+        by their queued job, of course).
+        """
+        self.sendable.denote_as_queued()
+        # And now the sendable must be considered ineligible
+        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+
+    def test_future_messages_are_ineligible(self):
+        """
+        Verifies that queued messages are ineligible for sending (other than
+        by their queued job, of course).
+        """
+        self.sendable.scheduled_send_time = (timezone.now() + datetime.timedelta(hours=1))
+        self.sendable.save()
+        # And now the sendable must be considered ineligible
+        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+
+    def test_base_send(self):
+        """
+        Individual models are able to able to opt-out of being sent according
+        to arbitrary business logic. Make sure that's happening.
+        """
+        # It should have found > 0 sendable models and sent 1 item
+        num_sent, num_sendables = self.sender.deliver_messages()
+        self.assertEquals(num_sent, 1)
+        self.assertTrue(num_sendables > 0)
+
+    def test_final_check(self):
+        """
+        Individual models are able to able to opt-out of being sent according
+        to arbitrary business logic. Make sure that's happening.
+        """
+        # Attaching this story will trigger the individual record
+        # level send-time opt-out
+        self.user.email = ''
+        self.user.save()
+
+        # It should have found > 0 sendable models, but sent 0 items
+        num_sent, num_sendables = self.sender.deliver_messages()
+        self.assertEquals(num_sent, 0)
+        self.assertTrue(num_sendables > 0)
+
+        # Our sendable's ``cancelled_at_send_time`` flag should have been set
+        self.sendable = models.WelcomeEmail.objects.get(pk=self.sendable.pk)
+        self.assertTrue(self.sendable.cancelled_at_send_time)

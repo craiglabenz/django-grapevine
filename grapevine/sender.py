@@ -27,7 +27,7 @@ class ScheduledSendableSender(object):
     def deliver_messages(self):
         from grapevine import mixins
 
-        self.get_logger().info("Beginning scan for sendable messages...")
+        # self.get_logger().info("Beginning scan for sendable messages...")
 
         num_sent = num_sendables = 0
         content_types = [ct for ct in ContentType.objects.all()]
@@ -43,7 +43,7 @@ class ScheduledSendableSender(object):
                 num_sendables += 1
                 num_sent += ScheduledSendableSender.process_sendable_model(cls)
 
-        self.get_logger().info("Sent %s messages for %s total Sendable models.", num_sent, num_sendables)
+        # self.get_logger().info("Sent %s messages for %s total Sendable models.", num_sent, num_sendables)
 
         return num_sent, num_sendables
 

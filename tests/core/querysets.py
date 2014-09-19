@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
-# Django
-from django.db.models.query import QuerySet
+# 3rd Party
+from grapevine.querysets import SendableQuerySet
 
 
-class WelcomeEmailQuerySet(QuerySet):
+class WelcomeEmailQuerySet(SendableQuerySet):
     """Custom functions would ultimately go here"""

@@ -38,3 +38,10 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
 
     def get_recipients(self):
         return [self.user.email]
+
+    def confirm_individual_sendability(self):
+        """Only send Welcome Emails to users with email addresses"""
+        if not self.user.email:
+            self.cancelled_at_send_time = True
+            self.save()
+        return bool(self.user.email)
