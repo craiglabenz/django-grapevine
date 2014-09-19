@@ -206,6 +206,3 @@ class QueuedMessage(GrapevineModel):
 
     def unicode(self):
         return 'Queued Message %s:%s' % (self.message_type_id, self.message_id,)
-
-
-from .emails.models import *
