@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 
 # Local Apps
-from grapevine.admin_base import BaseModelAdmin, SendableAdminMixin, FreezableTemplateAdminMixin
+from grapevine.admin_base import BaseModelAdmin, SendableAdminMixin
 from .models import Email, EmailRecipient, EmailBackend, EmailVariable, \
     RawEvent, Event, EmailEvent, UnsubscribedAddress
 
@@ -54,11 +54,6 @@ class EmailableAdminMixin(SendableAdminMixin):
                 context['error_subject'] = "ERROR: Could not generate a subject. Does the template lack a subject?"
 
         return super(EmailableAdminMixin, self).render_change_form(request, context, add, change, form_url, obj)
-
-
-class FreezableEmailableAdminMixin(FreezableTemplateAdminMixin, EmailableAdminMixin):
-    """
-    """
 
 
 class EmailInlineMixin(object):

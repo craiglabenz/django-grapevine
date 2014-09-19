@@ -349,53 +349,6 @@ class TemplateSendableMixin(SendableMixin):
         return self.template.as_template()
 
 
-class TemplateFreezableSendableMixin(TemplateSendableMixin):
-    """
-    Adds the ability for a TemplateSendable to freeze its template's content and
-    make edits specific to just itself. Obviously, this only makes any sense to
-    do if the message is scheduled for the future and hasn't yet been sent.
-    """
-    customized_template = models.TextField(blank=True, verbose_name="Customized Template",
-        help_text="Trumps the contents of any selected template, come send time.")
-    customized_subject = models.CharField(max_length=500, blank=True, verbose_name="Customized Subject",
-        help_text="May or may not be used, as per the discretion of the actual sender. But, either way, \
-        it trumps anything for subject in the template record.")
-
-    class Meta(TemplateSendableMixin.Meta):
-        abstract = True
-
-    def freeze_template(self, should_save=True):
-        """
-        Freezes the state of the template into a local field for possible tweaking.
-
-        Arguments:
-        @should_save  {bool}   Whether or not this function will write to the DB
-                               or just adjust the obj locally. Pass False if you
-                               want to handle saving yourself later, of course.
-        """
-        self.customized_template = self.template.get_content()
-        self.customized_subject = self.template.subject
-        if should_save:
-            self.save()
-
-    def get_template(self, template_name=None):
-        """
-        If `self.customized_template` is set, that trumps any contents
-        within `self.template`. The purpose of this function is to wrap
-        that logic and return the appropriate Template obj.
-        """
-        if not bool(self.customized_template):
-            return super(TemplateFreezableSendableMixin, self).get_template()
-        else:
-            return self.template.template_engine_class(self.customized_template)
-
-    def get_raw_subject(self):
-        if not bool(self.customized_subject):
-            return super(TemplateFreezableSendableMixin, self).get_raw_subject()
-        else:
-            return self.customized_subject
-
-
 class Emailable(object):
     """
     Combine with any of the Sendable mixins to explicitly define which
@@ -426,39 +379,3 @@ class Emailable(object):
     def add_ganalytic(self, transport, key, value):
         transport.add_variable('utm_%s' % (key,), value)
         return transport
-
-
-class FreezableEmailable(Emailable, models.Model):
-
-    customized_reply_to = models.CharField(max_length=255, blank=True, verbose_name="Customized Reply To",
-        help_text="Trumps the contexts of any selected template, come send time.")
-    customized_from_email = models.CharField(max_length=255, blank=True, verbose_name="Customized From Email",
-        help_text="Trumps the contexts of any selected template, come send time.")
-
-    class Meta:
-        abstract = True
-
-    def get_raw_reply_to(self):
-        if not bool(self.customized_reply_to):
-            return super(FreezableEmailable, self).get_raw_reply_to()
-        else:
-            return self.customized_reply_to
-
-    def get_raw_from_email(self):
-        if not bool(self.customized_from_email):
-            return super(FreezableEmailable, self).get_raw_from_email()
-        else:
-            return self.customized_from_email
-
-    def freeze_template(self, should_save=True):
-        """
-        Freezes the state of the template into a local field for possible tweaking.
-
-        Arguments:
-        @should_save  {bool}   Whether or not this function will write to the DB
-                               or just adjust the obj locally. Pass False if you
-                               want to handle saving yourself later, of course.
-        """
-        self.customized_reply_to = self.get_raw_reply_to()
-        self.customized_from_email = self.get_raw_from_email()
-        return super(FreezableEmailable, self).freeze_template(should_save)
