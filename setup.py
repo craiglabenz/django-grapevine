@@ -1,7 +1,7 @@
 import os
 from distutils.core import setup
 
-from tablets import __version__
+from grapevine import __version__
 
 
 CLASSIFIERS = [
@@ -17,11 +17,11 @@ INSTALL_REQUIRES = [
 ]
 
 setup(
-    name="grapevine",
+    name="django-grapevine",
     packages=["grapevine"],
     version=__version__,
     description="A comprehensive email tool for Django",
-    url="https://github.com/craiglabenz/tablets",
+    url="https://github.com/craiglabenz/django-grapevine",
     download_url="https://github.com/craiglabenz/django-grapevine/tarball/{0}".format(__version__),
     keywords=["django", "email", "sending", "tracking"],
     classifiers=CLASSIFIERS,
