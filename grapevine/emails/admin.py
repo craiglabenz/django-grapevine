@@ -98,11 +98,12 @@ class EmailAdmin(BaseModelAdmin):
     # Everything is readonly because this table is inherently immutable.
     # It makes no sense to edit the records of that which has already happened.
     readonly_fields = ['subject', 'html_body', 'text_body', 'from_email', 'reply_to', 'type', 'admin_text_full',
-        'status', 'sent_at', 'is_test', 'communication_time', 'guid', 'admin_log', 'backend', 'text_excerpt', 'html_excerpt']
+        'status', 'sent_at', 'is_test', 'communication_time', 'guid', 'admin_log', 'backend', 'text_excerpt', 'admin_html']
 
-    def html_excerpt(self, obj):
-        return obj.html_body[:100]
-    html_excerpt.short_description = 'HTML Excerpt'
+    def admin_html(self, obj):
+        return obj.html_body
+    admin_html.short_description = 'HTML'
+    admin_html.allow_tags = True
 
     def text_excerpt(self, obj):
         return obj.text_body[:100]
@@ -120,7 +121,7 @@ class EmailAdmin(BaseModelAdmin):
 
     fieldsets = (
         ('Message Quick View', {'fields':
-            ('subject', 'html_excerpt', 'text_excerpt', 'from_email', 'reply_to',)
+            ('subject', 'admin_html', 'text_excerpt', 'from_email', 'reply_to',)
         },),
         ('Full Message', {
             'classes': ('collapse',),
