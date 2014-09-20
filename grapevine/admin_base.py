@@ -193,7 +193,7 @@ class SendableAdminMixin(object):
                 'opts': self.model._meta,
                 'title': 'Send Real %s' % (self.message_type_verbose,)
             }
-            return render_view(request, 'grapevine/emails/templates/admin/send_real.html', context)
+            return render_view(request, 'admin/send_real.html', context)
         elif request.method == 'POST':
             return self.send_message(request, obj, False)
 
@@ -205,7 +205,7 @@ class SendableAdminMixin(object):
                 'opts': self.model._meta,
                 'title': 'Send Test %s' % (self.message_type_verbose,)
             }
-            return render_view(request, 'grapevine/emails/templates/admin/send_test.html', context)
+            return render_view(request, 'admin/send_test.html', context)
         elif request.method == 'POST':
             return self.send_message(request, obj, True, request.POST.get('recipient_address'))
 
