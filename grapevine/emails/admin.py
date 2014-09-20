@@ -20,14 +20,11 @@ class EmailableAdminMixin(SendableAdminMixin):
     # Used for admin display purposes
     message_type_verbose = "Email"
     if IS_SUIT_AVAILBLE:
-        change_form_template = 'grapevine/emails/templates/admin/suit_change_sendable_form.html'
+        change_form_template = 'admin/suit_change_emailable_form.html'
     else:
-        change_form_template = 'grapevine/emails/templates/admin/change_sendable_form.html'
+        change_form_template = 'admin/change_emailable_form.html'
 
     def get_test_recipient(self, request, obj_id):
-        """
-        No idea what makes sense against a generic Sendable
-        """
         return request.user.email
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):

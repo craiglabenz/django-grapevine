@@ -1,14 +1,7 @@
-{% extends 'grapevine/templates/admin/change_sendable_form.html' %}
+{% extends 'admin/change_sendable_form.html' %}
 
 {% block pre-preview %}
-    <style>
-        table {
-            width:100%;
-            margin-top:20px;
-        }
-    </style>
-
-    <table>
+    <table class="table table-bordered table-condensed table-striped" style="margin-top:20px;">
         <thead>
             <tr><th colspan="2">Meta</th></tr>
         </thead>

@@ -104,6 +104,8 @@ class SendableAdminMixin(object):
     You must set `model` in any Admin classes inheriting from this
     class or nothing will work.
     """
+    preview_height = 100
+
     # Used for admin display purposes
     message_type_verbose = "Message"
 
@@ -143,6 +145,7 @@ class SendableAdminMixin(object):
         if obj:
             # Get the preview URL
             view_name = 'admin:%s_render' % (self.admin_view_info,)
+            context['preview_height'] = self.preview_height
             context['preview_url'] = reverse(view_name, args=(obj.pk,))
 
             # Add in the message type, for nice clarity across various types of transports
@@ -182,9 +185,11 @@ class SendableAdminMixin(object):
     def send_real_message(self, request, obj_id):
         obj = get_object_or_404(self.model, pk=obj_id)
         if request.method == 'GET':
+            recipients = obj.get_recipients()
             context = {
                 'obj': obj,
-                'recipients': obj.get_recipients(),
+                'recipients': recipients,
+                'is_recipients_dict': isinstance(recipients, dict),
                 'opts': self.model._meta,
                 'title': 'Send Real %s' % (self.message_type_verbose,)
             }

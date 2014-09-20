@@ -9,11 +9,22 @@
             <div class="well">
                 <h5>Are you sure you want to send this message to:</h5>
                 {% if recipients %}
-                    <ul class="list-group">
-                    {% for recipient in recipients %}
-                        <li>{{ recipient }}</li>
-                    {% endfor %}
-                    </ul>
+                    {% if not is_recipients_dict %}
+                        <ul class="list-group">
+                        {% for recipient in recipients %}
+                            <li>{{ recipient }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        {% for type, sub_recipients in recipients.items %}
+                            <p><code>{{ type }}</code></p>
+                            <ul>
+                                {% for recipient in sub_recipients %}
+                                <li>{{ recipient }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    {% endif %}
                     <input type="submit" class="btn btn-info" value="Send Real" >
                 {% else %}
                     <h5>This message has no recipients.</h5>

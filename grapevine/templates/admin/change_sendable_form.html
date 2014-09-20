@@ -1,4 +1,4 @@
-{% extends 'grapevine/templates/admin/change_form.html' %}
+{% extends 'admin/grapevine_change_form.html' %}
 {% load url from future %}
 
 {% block after_field_sets %}
@@ -13,9 +13,12 @@
         <tbody>
             <tr>
                 <td>
-                    <iframe src="{{ preview_url }}" style="border:0; width:90%; padding:10px 5%;"></iframe>
+                    <iframe src="{{ preview_url }}" style="border:0; width:90%; padding:10px 5%; height:{{ preview_height }}px;"></iframe>
                 </td>
             </tr>
     </table>
+
+    {% block post-preview %}{% endblock post-preview %}
+
 {% endif %}
 {% endblock after_field_sets %}
