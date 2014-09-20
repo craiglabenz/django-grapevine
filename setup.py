@@ -46,12 +46,11 @@ def get_package_data(package):
 version = get_version('grapevine')
 
 
-if sys.argv[-1] == 'publish':
-    os.system("python setup.py sdist upload")
-    os.system("python setup.py bdist_wheel upload")
-    print("You probably want to also tag the version now:")
-    print("  git tag -a %s -m 'version %s'" % (version, version))
-    print("  git push --tags")
+if sys.argv[-1] == 'publish-test':
+    os.system("git tag -a %s -m 'version %s'" % (version, version))
+    os.system("git push origin master")
+    os.system("git push --tags")
+    os.system("python setup.py sdist upload -r pypitest")
     sys.exit()
 
 
