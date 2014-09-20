@@ -57,22 +57,33 @@ class EmailBackend(BaseEmailBackend):
         """A helper method that does the actual sending."""
         if not email_message.recipients():
             return False
+
         from_email = sanitize_address(email_message.from_email, email_message.encoding)
-        recipients = [sanitize_address(addr, email_message.encoding)
-                      for addr in email_message.recipients()]
+        to_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.to]
+        cc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.cc]
+        bcc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.bcc]
+
+        data = {
+            "to": ", ".join(to_recipients),
+            "from": from_email,
+        }
+        if cc_recipients:
+            data["cc"] = ", ".join(cc_recipients)
+
+        if bcc_recipients:
+            data["bcc"] = ", ".join(bcc_recipients)
+
+        data["v:grapevine-guid"] = email_message._email.guid
 
         try:
             self.r = requests.\
                 post(self._api_url + "messages.mime",
-                     auth=("api", self._access_key),
-                     data={
-                            "to": ", ".join(recipients),
-                            "from": from_email,
-                         },
-                     files={
-                            "message": StringIO(email_message.message().as_string()),
-                         }
-                     )
+                    auth=("api", self._access_key),
+                    data=data,
+                    files={
+                        "message": StringIO(email_message.message().as_string()),
+                    }
+                )
         except:
             if not self.fail_silently:
                 raise

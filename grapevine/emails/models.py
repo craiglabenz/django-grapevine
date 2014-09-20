@@ -340,6 +340,7 @@ class EmailBackend(GrapevineModel):
             if email.html_body:
                 msg.attach_alternative(email.html_body, "text/html")
 
+        msg._email = email
         return msg
 
     def finalize_message(self, message):
