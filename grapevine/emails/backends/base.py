@@ -2,8 +2,11 @@ from __future__ import unicode_literals
 import datetime
 
 # Django
-from django.utils import timezone
+from django.conf.urls import url
 from django.core.mail.backends.base import BaseEmailBackend
+from django.http import HttpResponse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 # Local Apps
 from grapevine.settings import grapevine_settings
@@ -12,9 +15,21 @@ from grapevine.emails.utils import parse_email
 
 
 class GrapevineEmailBackend(BaseEmailBackend):
+    # Used to register a callback url for the 3rd party
+    DISPLAY_NAME = None
+
+    # Used to process catalog events
+    IMPORT_PATH = None
+
+    LISTENS_FOR_EVENTS = True
 
     def get_urls(self):
-        return []
+        urls = []
+        if self.LISTENS_FOR_EVENTS:
+            urls.append(
+                url(r'^backends/{0}/events/$'.format(self.DISPLAY_NAME), self.events_webhook, name="{0}-events-webhook".format(self.DISPLAY_NAME)),
+            )
+        return urls
 
     def process_event(self, event):
         """
@@ -76,3 +91,25 @@ class GrapevineEmailBackend(BaseEmailBackend):
                 recipient_list.pop(index)
 
         return message
+
+    @csrf_exempt
+    def events_webhook(self, request):
+        """
+        Responds to {POST /grapevine/backends/:DISPLAY_NAME/events/}
+        """
+        # Using the ``require_POST`` decorator causes problems
+        if request.method != 'POST':
+            return HttpResponse(status=405)
+
+        try:
+            backend = email_models.EmailBackend.objects.filter(path=self.IMPORT_PATH)[0]
+        except IndexError:
+            backend = email_models.EmailBackend.objects.create(path=self.IMPORT_PATH)
+
+        # Pull out the payload from request.POST as per
+        # https://docs.djangoproject.com/en/1.6/ref/request-response/#django.http.HttpRequest.POST
+        email_models.RawEvent.objects.create(backend=backend, payload=request.body,
+                                             remote_ip=request.META['REMOTE_ADDR'])
+
+        # A 200 tells SendGrid we successfully accepted this event payload
+        return HttpResponse(status=200)

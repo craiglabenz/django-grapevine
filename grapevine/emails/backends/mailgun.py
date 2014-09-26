@@ -22,6 +22,8 @@ class MailgunAPIError(Exception):
 class EmailBackend(GrapevineEmailBackend):
     """A Django Email backend that uses mailgun. Inspiration: https://github.com/bradwhittington/django-mailgun
     """
+    DISPLAY_NAME = "mailgun"
+    IMPORT_PATH = "grapevine.emails.backends.MailGunEmailBackend"
 
     def __init__(self, fail_silently=False, *args, **kwargs):
         access_key, server_name = (kwargs.pop('access_key', None),

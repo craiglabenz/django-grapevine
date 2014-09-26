@@ -4,10 +4,7 @@ import json
 
 # Django
 from django.conf import settings
-from django.conf.urls import url
-from django.http import HttpResponse
 from django.core.mail.message import EmailMessage
-from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
 # 3rd Party
@@ -27,6 +24,9 @@ from grapevine.emails import models as email_models
 
 
 class EmailBackend(GrapevineEmailBackend):
+
+    DISPLAY_NAME = "sendgrid"
+    IMPORT_PATH = "grapevine.emails.backends.SendGridEmailBackend"
 
     # These are SendGrid variables that have a simple format of
     # `name` - enabled - {0|1}
@@ -163,33 +163,6 @@ class EmailBackend(GrapevineEmailBackend):
         # Arbitrarily return True if ``self.fail_silently``, otherwise
         # only return True if SendGrid agrees that it worked
         return self.fail_silently or self.send_response_code == 200
-
-    def get_urls(self):
-        return [
-            url(r'^backends/sendgrid/events/$', self.events_webhook, name="sendgrid-events-webhook"),
-        ]
-
-    @csrf_exempt
-    def events_webhook(self, request):
-        """
-        Responds to {POST /grapevine/backends/sendgrid/events/}
-        """
-        # Using the ``require_POST`` decorator causes problems
-        if request.method != 'POST':
-            return HttpResponse(status=405)
-
-        try:
-            backend = email_models.EmailBackend.objects.filter(path='grapevine.emails.backends.SendGridEmailBackend')[0]
-        except IndexError:
-            backend = email_models.EmailBackend.objects.create(path='grapevine.emails.backends.SendGridEmailBackend')
-
-        # Pull out the payload from request.POST as per
-        # https://docs.djangoproject.com/en/1.6/ref/request-response/#django.http.HttpRequest.POST
-        sgl = email_models.RawEvent.objects.create(backend=backend, payload=request.body,
-            remote_ip=request.META['REMOTE_ADDR'])
-
-        # A 200 tells SendGrid we successfully accepted this event payload
-        return HttpResponse(status=200)
 
     def get_event(self, sendgrid_event_name):
         if sendgrid_event_name in self.EVENTS_MAP.keys():
