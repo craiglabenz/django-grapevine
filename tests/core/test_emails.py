@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import datetime
+# import mock
+# import requests
 
 # Django
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -13,13 +16,14 @@ from django.utils import timezone
 # 3rd Party
 from grapevine.generics import EmailSendable
 from grapevine.settings import grapevine_settings
+from grapevine.emails.backends import MailGunEmailBackend
 from grapevine.emails.models import Email, EmailRecipient, \
     EmailBackend, EmailVariable, UnsubscribedAddress, RawEvent
 import tablets
 
 # Local Apps
 from core import models
-from factories import EmailFactory, SendGridEmailFactory
+from factories import UserFactory, WelcomeEmailFactory, EmailFactory, SendGridEmailFactory
 
 
 class RecipientsTester(TestCase):
@@ -284,7 +288,7 @@ class UnsubscribedTester(TestCase):
 
 
 
-@override_settings(SHOULD_USE_BRITE_VERIFY=False, EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend')
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend')
 class GrapevineSenderTester(TestCase):
     """
     Testing Grapevine's abstract classes require real classes with real DB tables.
@@ -361,3 +365,47 @@ class GrapevineSenderTester(TestCase):
         # Our sendable's ``cancelled_at_send_time`` flag should have been set
         self.sendable = models.WelcomeEmail.objects.get(pk=self.sendable.pk)
         self.assertTrue(self.sendable.cancelled_at_send_time)
+
+
+@override_settings(EMAIL_BACKEND="grapevine.emails.backends.MailGunEmailBackend")
+class MailgunTester(TestCase):
+
+    def setUp(self):
+        super(MailgunTester, self).setUp()
+        tablets.models.Template.objects.create(name="Welcome Email", content="<h1>Welcome, {{ sendable.user }}!</h1>")
+
+    def test_base_send(self):
+        user = UserFactory()
+        we = WelcomeEmailFactory(user=user)
+
+        # with mock.patch.object(MailGunEmailBackend, 'post') as mocked_post:
+        #     # Fake a response
+        #     mocked_response = requests.Response()
+        #     mocked_response.status_code = 200
+        #     mocked_response._content = {}
+        #     mocked_post.return_value = mocked_response
+
+        is_sent = we.send(backend=settings.EMAIL_BACKEND)
+        self.assertTrue(is_sent)
+
+        self.assertEquals(we.message_id, 1)
+        self.assertEquals(Email.objects.get(pk=1).status, Email.SENT)
+
+    def test_prepare_data(self):
+        email_message = EmailMultiAlternatives(
+            subject="Hello old friend!",
+            body="Seriously, long time no see.",
+            from_email="Marco Polo <marco@polo.com>",
+            to=["meat@chicken.com"],
+            cc=[],
+            bcc=["Top Secret <top@secret.com>", "Top Secret2 <top@secret2.com>"],
+            headers={},
+        )
+        email_message._email = Email().ensure_guid()
+
+        data = MailGunEmailBackend().prepare_data(email_message)
+
+        self.assertEquals(data["to"], "meat@chicken.com")
+        self.assertNotIn("cc", data.keys())
+        self.assertEquals(data["bcc"], "Top Secret <top@secret.com>, Top Secret2 <top@secret2.com>")
+        self.assertEquals(data["from"], email_message.from_email)

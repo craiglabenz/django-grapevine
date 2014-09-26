@@ -265,7 +265,7 @@ class SendableMixin(models.Model):
         """
         # Already sent messages shouldn't be resent.
         if not is_test and self.is_sent and not kwargs.pop('force_resend', False):
-            self.get_logger(decorated_class=SendableMixin).warning("Attempted to resend %s with Id %s", self.__class__.__name__, self.pk,)
+            # self.get_logger(decorated_class=SendableMixin).warning("Attempted to resend %s with Id %s", self.__class__.__name__, self.pk,)
             return False
 
         self.transport = self.as_transport(recipient_address=recipient_address,

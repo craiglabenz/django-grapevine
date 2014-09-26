@@ -225,7 +225,7 @@ class SendableAdminMixin(object):
             return HttpResponseRedirect(reverse("admin:%s_change" % (self.admin_view_info,), args=(obj.pk,)))
 
         # Load the Sendable and send a message
-        is_sent = obj.send(recipient_address=recipient_address, is_test=is_test)
+        is_sent = obj.send(recipient_address=recipient_address, is_test=is_test, force_resend=True)
 
         if is_sent:
             message_beginning = 'Test' if is_test else ''

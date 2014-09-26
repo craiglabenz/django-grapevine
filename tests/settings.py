@@ -61,6 +61,12 @@ SENDGRID_PASSWORD = "password-would-go-here"
 ######## END SENDGRID CONFIGURATION
 
 
+######## MAILGUN CONFIGURATION
+# As per: http://documentation.mailgun.com/user_manual.html#sending-via-api
+MAILGUN_ACCESS_KEY = 'key-3ax6xnjp29jd6fds4gc373sgvjxteol0'
+MAILGUN_SERVER_NAME = 'samples.mailgun.org'
+######## END MAILGUN CONFIGURATION
+
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.auth.context_processors.auth",

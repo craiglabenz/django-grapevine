@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
+import json
 
 # Django
-from django.db import models
+from django.db import models, transaction
 from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 
 class GrapevineModel(models.Model):
@@ -101,7 +103,7 @@ class GrapevineModel(models.Model):
         The wrapper function around ``_append_to_log()``. The distinction exists to help
         sanely enforce the ``should_use_transaction`` flag.
         """
-        if should_use_transaction:
+        if should_save and should_use_transaction:
             with transaction.atomic():
                 return self._append_to_log(log, should_save, desc, should_reload)
         else:
@@ -118,6 +120,9 @@ class GrapevineModel(models.Model):
         if self.log is None:
             self.log = ''
             self.save()
+
+        if isinstance(log, dict):
+            log = json.dumps(log)
 
         if should_reload:
             # Update local data to ensure sure nothing else committed something

@@ -9,18 +9,17 @@ except ImportError:
 
 # Django
 from django.conf import settings
-from django.core.mail.backends.base import BaseEmailBackend
 from django.core.mail.message import sanitize_address
 
 # Local
-# from core.utils import requests
+from grapevine.emails.backends.base import GrapevineEmailBackend
 
 
 class MailgunAPIError(Exception):
     pass
 
 
-class EmailBackend(BaseEmailBackend):
+class EmailBackend(GrapevineEmailBackend):
     """A Django Email backend that uses mailgun. Inspiration: https://github.com/bradwhittington/django-mailgun
     """
 
@@ -33,8 +32,8 @@ class EmailBackend(BaseEmailBackend):
                         *args, **kwargs)
 
         try:
-            self._access_key = access_key or getattr(settings, 'MAILGUN_ACCESS_KEY')
-            self._server_name = server_name or getattr(settings, 'MAILGUN_SERVER_NAME')
+            self._access_key = access_key or getattr(settings, 'MAILGUN_ACCESS_KEY', '')
+            self._server_name = server_name or getattr(settings, 'MAILGUN_SERVER_NAME', '')
         except AttributeError:
             if fail_silently:
                 self._access_key, self._server_name = None
@@ -58,33 +57,12 @@ class EmailBackend(BaseEmailBackend):
         if not email_message.recipients():
             return False
 
-        from_email = sanitize_address(email_message.from_email, email_message.encoding)
-        to_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.to]
-        cc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.cc]
-        bcc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.bcc]
-
-        data = {
-            "to": ", ".join(to_recipients),
-            "from": from_email,
-        }
-        if cc_recipients:
-            data["cc"] = ", ".join(cc_recipients)
-
-        if bcc_recipients:
-            data["bcc"] = ", ".join(bcc_recipients)
-
-        data["v:grapevine-guid"] = email_message._email.guid
+        data = self.prepare_data(email_message)
 
         try:
-            self.r = requests.\
-                post(self._api_url + "messages.mime",
-                    auth=("api", self._access_key),
-                    data=data,
-                    files={
-                        "message": StringIO(email_message.message().as_string()),
-                    }
-                )
-        except:
+            self.r = self.post(email_message, data)
+            print self.r.status_code, self.r.content
+        except Exception as e:
             if not self.fail_silently:
                 raise
             return False
@@ -98,6 +76,45 @@ class EmailBackend(BaseEmailBackend):
             return False
 
         return True
+
+    def prepare_data(self, email_message):
+        from_email = sanitize_address(email_message.from_email, email_message.encoding)
+        to_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.to]
+        cc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.cc]
+        bcc_recipients = [sanitize_address(addr, email_message.encoding) for addr in email_message.bcc]
+
+        data = {
+            "to": ", ".join(to_recipients),
+            "from": from_email,
+            "subject": email_message.subject,
+            "text": email_message.body,
+        }
+
+        # # Attach an HTML body if one was set
+        # alternatives = getattr(email_message, "alternatives", [])
+        # if alternatives:
+        #     for content, mimetype in alternatives:
+        #         if mimetype == "text/html":
+        #             data["html"] = content
+        #             break
+
+        if cc_recipients:
+            data["cc"] = ", ".join(cc_recipients)
+
+        if bcc_recipients:
+            data["bcc"] = ", ".join(bcc_recipients)
+
+        data["v:grapevine-guid"] = email_message._email.guid
+        return data
+
+    def post(self, email_message, data):
+        return requests.post(self._api_url + "messages.mime",
+            auth=("api", self._access_key),
+            data=data,
+            files={
+                "message": StringIO(email_message.message().as_string()),
+            }
+        )
 
     def send_messages(self, email_messages):
         """Sends one or more EmailMessage objects and returns the number of

@@ -60,6 +60,7 @@ class Transport(GrapevineModel):
     def ensure_guid(self):
         if not (self.guid):
             self.guid = str(uuid.uuid4())
+        return self
 
     @property
     def sendable_class(self):

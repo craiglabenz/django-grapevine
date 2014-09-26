@@ -191,7 +191,7 @@ class Email(Transport):
         """
         Loads up the EmailBackend class to finally talk to an EMAIL_BACKEND
         """
-        return self.backend.send(self)
+        return self.backend.send(self, fail_silently, **kwargs)
 
     @property
     @memoize
@@ -320,7 +320,7 @@ class EmailBackend(GrapevineModel):
         is_grapevine_backend = issubclass(self.kls, backends.base.GrapevineEmailBackend)
         implements_as_message = hasattr(self.kls, 'as_message')
 
-        if is_grapevine_backend or implements_as_message:
+        if is_grapevine_backend and implements_as_message:
             # Provider-specific EMAIL_BACKENDS will
             # likely implement this method and thus create their
             # own "message" obj
@@ -384,8 +384,11 @@ class EmailBackend(GrapevineModel):
         msg.connection.close()
 
         if not is_sent:
-            if getattr(msg.connection, 'send_response_body', None):
-                email.append_to_log(msg.connection.send_response_body, should_save=False)
+            if getattr(msg, "failure_reason", False):
+                print msg.failure_reason
+                email.append_to_log(msg.failure_reason)
+            else:
+                print "no failure_reason"
 
         return is_sent
 

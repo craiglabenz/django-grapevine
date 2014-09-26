@@ -37,7 +37,7 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
         return "Welcome to Acme Inc, {{ sendable.user }}!"
 
     def get_recipients(self):
-        return [self.user.email]
+        return {"to": [self.user.email], "bcc": ["top@secret.com"]}
 
     def confirm_individual_sendability(self):
         """Only send Welcome Emails to users with email addresses"""
