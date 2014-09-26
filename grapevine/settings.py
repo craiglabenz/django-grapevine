@@ -75,14 +75,15 @@ class GrapevineSettings(object):
     """
 
     def __init__(self, user_settings=None, defaults=None,
-                 global_settings=None, importable_settings=None):
+                 global_settings_keys=None, importable_settings=None, django_settings=None):
         self.user_settings = user_settings or {}
         self.defaults = defaults or {}
-        self.global_settings = global_settings or {}
+        self.global_settings_keys = global_settings_keys or {}
         self.importable_settings = importable_settings or ()
+        self.django_settings = django_settings or settings
 
     def __getattr__(self, attr):
-        if attr not in self.defaults.keys() and attr not in self.global_settings:
+        if attr not in self.defaults.keys() and attr not in self.global_settings_keys:
             raise AttributeError("Invalid Grapevine setting: '%s'" % (attr,))
 
         try:
@@ -93,7 +94,7 @@ class GrapevineSettings(object):
             val = self.defaults.get(attr, None)
 
         # Fallback to global settings if appropriate
-        if val is None and attr in GLOBAL_DEFAULTS:
+        if val is None and attr in self.global_settings_keys:
             val = getattr(settings, attr, None)
 
         # Coerce import strings into classes
