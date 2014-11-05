@@ -1,17 +1,15 @@
 from __future__ import unicode_literals
-from collections import OrderedDict
-import json
 
 # Django
 from django.contrib import admin, messages
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.shortcuts import get_object_or_404
 from django.contrib.contenttypes.models import ContentType
+from django.utils import six
 
 # Local Apps
-from .forms import AdminBulkEditForm
 from grapevine.emails.filters import OnSpecificDateListFilter
 from grapevine.utils import render_view
 
@@ -186,6 +184,8 @@ class SendableAdminMixin(object):
         obj = get_object_or_404(self.model, pk=obj_id)
         if request.method == 'GET':
             recipients = obj.get_recipients()
+            if isinstance(recipients, six.string_types):
+                recipients = [recipients]
             context = {
                 'obj': obj,
                 'recipients': recipients,
