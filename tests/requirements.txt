@@ -1,6 +1,7 @@
 Django
 django-model-utils
 django-suit
+South
 factory-boy
 sendgrid
-tablets
+tablets==0.3.2

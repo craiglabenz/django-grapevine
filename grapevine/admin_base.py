@@ -106,6 +106,7 @@ class SendableAdminMixin(object):
 
     # Used for admin display purposes
     message_type_verbose = "Message"
+    whitelisted_filter_fields = ()
 
     readonly_fields = ['admin_message']
     list_filter = (('scheduled_send_time', OnSpecificDateListFilter),)

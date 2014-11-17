@@ -63,7 +63,6 @@ class EmailBackend(GrapevineEmailBackend):
 
         try:
             self.r = self.post(email_message, data)
-            print self.r.status_code, self.r.content
         except Exception as e:
             if not self.fail_silently:
                 raise

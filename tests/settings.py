@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import django
 SETTINGS_DIR = os.path.dirname(__file__)
 BASE_DIR = os.path.dirname(os.path.dirname(SETTINGS_DIR))
 
@@ -13,6 +14,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.sites',
 
+    'django_ace',
+
     # Used for database templates
     'tablets',
     'grapevine',
@@ -21,6 +24,11 @@ INSTALLED_APPS = [
     # Houses some basic stuff
     'core',
 ]
+
+
+if django.VERSION < (1,7):
+    INSTALLED_APPS += ("south",)
+
 
 ######## GRAPEVINE CONFIGURATION
 GRAPEVINE = {
@@ -102,12 +110,20 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(os.path.dirname(__file__), 'database.db'),
     }
 }
+
+
+SOUTH_MIGRATION_MODULES = {
+    "grapevine": "grapevine.south_migrations",
+    "emails": "grapevine.emails.south_migrations",
+}
+
 
 import sys
 sys.dont_write_bytecode = True

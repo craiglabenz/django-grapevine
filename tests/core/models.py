@@ -21,7 +21,7 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
         objects = WelcomeEmailQuerySet.as_manager()
     except AttributeError:
         # This handles Django <= 1.6
-        objects = PassThroughManager.for_queryset_class(WelcomeEmailQuerySet)
+        objects = PassThroughManager.for_queryset_class(WelcomeEmailQuerySet)()
 
     class Meta:
         verbose_name = "Welcome Email"

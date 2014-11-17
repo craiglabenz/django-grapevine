@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import datetime
-# import mock
-# import requests
+import mock
+import requests
 
 # Django
 from django.conf import settings
@@ -23,7 +23,7 @@ import tablets
 
 # Local Apps
 from core import models
-from factories import UserFactory, WelcomeEmailFactory, EmailFactory, SendGridEmailFactory
+from factories import UserFactory, EmailFactory, SendGridEmailFactory
 
 
 class RecipientsTester(TestCase):
@@ -376,16 +376,16 @@ class MailgunTester(TestCase):
 
     def test_base_send(self):
         user = UserFactory()
-        we = WelcomeEmailFactory(user=user)
+        we = models.WelcomeEmail.objects.create(user=user)
 
-        # with mock.patch.object(MailGunEmailBackend, 'post') as mocked_post:
-        #     # Fake a response
-        #     mocked_response = requests.Response()
-        #     mocked_response.status_code = 200
-        #     mocked_response._content = {}
-        #     mocked_post.return_value = mocked_response
+        with mock.patch.object(MailGunEmailBackend, 'post') as mocked_post:
+            # Fake a response
+            mocked_response = requests.Response()
+            mocked_response.status_code = 200
+            mocked_response._content = {}
+            mocked_post.return_value = mocked_response
 
-        is_sent = we.send(backend=settings.EMAIL_BACKEND)
+            is_sent = we.send(backend=settings.EMAIL_BACKEND)
         self.assertTrue(is_sent)
 
         self.assertEquals(we.message_id, 1)
