@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.template import Context
 from django.template.loader import get_template
+from django.utils import six
 try:
     # This is the 1.7 import
     from django.contrib.contenttypes.fields import GenericRelation
@@ -158,6 +159,21 @@ class SendableMixin(models.Model):
         # If this is a real email and no explicit recipients have
         # been defined, fall back to what this Sendable defines.
         return self.get_recipients()
+
+    def get_normalized_recipients(self):
+        recipients = self.get_recipients()
+
+        # Coerce them into a standard structure
+        if isinstance(recipients, six.string_types):
+            recipients = {"to": [recipients]}
+        elif isinstance(recipients, list):
+            recipients = {"to": recipients}
+        elif isinstance(recipients, dict):
+            for key, value in recipients.items():
+                if isinstance(value, six.string_types):
+                    recipients[key] = [value]
+
+        return recipients
 
     def get_recipients(self):
         raise NotImplementedError("%s failed to implement `get_recipients`" % self.__class__.__name__)

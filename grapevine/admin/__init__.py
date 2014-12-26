@@ -4,8 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 # Local Apps
-from .admin_base import BaseModelAdmin
-from emails.admin import *
+from .base import BaseModelAdmin
 from grapevine.models import QueuedMessage
 
 

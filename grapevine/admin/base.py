@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
 # Django
-from django.contrib import admin, messages
-from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.conf.urls import url
-from django.core.urlresolvers import reverse, NoReverseMatch
-from django.shortcuts import get_object_or_404
+from django.contrib import admin, messages
 from django.contrib.contenttypes.models import ContentType
-from django.utils import six
+from django.core.urlresolvers import reverse, NoReverseMatch
+from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import get_object_or_404, redirect
 
 # Local Apps
 from grapevine.emails.filters import OnSpecificDateListFilter
@@ -102,7 +101,7 @@ class SendableAdminMixin(object):
     You must set `model` in any Admin classes inheriting from this
     class or nothing will work.
     """
-    preview_height = 100
+    PREVIEW_HEIGHT = 100
 
     # Used for admin display purposes
     message_type_verbose = "Message"
@@ -112,6 +111,24 @@ class SendableAdminMixin(object):
     list_filter = (('scheduled_send_time', OnSpecificDateListFilter),)
 
     change_form_template = 'admin/change_sendable_form.html'
+
+    def get_actions(self, request):
+        actions = super(SendableAdminMixin, self).get_actions(request)
+
+        # Add our custom action
+        label = "Detatch from {0}".format(self.message_type_verbose)
+        actions.insert(len(actions), label, [self.__class__.detatch_messages, label, label])
+
+        return actions
+
+    def detatch_messages(self, request, queryset):
+        cnt = queryset.count()
+
+        # Nothing fancy, just nuke the field.
+        queryset.update(message_id=None)
+
+        messages.add_message(request, messages.SUCCESS, "Detatched {0} {1}".format(cnt, self.message_type_verbose))
+        return redirect(request.path + "?" + request.GET.urlencode())
 
     def lookup_allowed(self, key, value):
         """
@@ -144,7 +161,7 @@ class SendableAdminMixin(object):
         if obj:
             # Get the preview URL
             view_name = 'admin:%s_render' % (self.admin_view_info,)
-            context['preview_height'] = self.preview_height
+            context['PREVIEW_HEIGHT'] = self.PREVIEW_HEIGHT
             context['preview_url'] = reverse(view_name, args=(obj.pk,))
 
             # Add in the message type, for nice clarity across various types of transports
@@ -184,13 +201,13 @@ class SendableAdminMixin(object):
     def send_real_message(self, request, obj_id):
         obj = get_object_or_404(self.model, pk=obj_id)
         if request.method == 'GET':
-            recipients = obj.get_recipients()
-            if isinstance(recipients, six.string_types):
-                recipients = [recipients]
+
+            # Load the recipients
+            recipients = obj.get_normalized_recipients()
+
             context = {
                 'obj': obj,
                 'recipients': recipients,
-                'is_recipients_dict': isinstance(recipients, dict),
                 'opts': self.model._meta,
                 'title': 'Send Real %s' % (self.message_type_verbose,)
             }

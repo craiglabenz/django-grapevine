@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 # 3rd Party
-from grapevine.admin_base import BaseModelAdmin, SendableInline
+from grapevine.admin.base import BaseModelAdmin, SendableInline
 from grapevine.emails.admin import EmailableAdminMixin
 
 # Local Apps
@@ -25,7 +25,7 @@ class WelcomeEmailAdmin(EmailableAdminMixin, BaseModelAdmin):
     raw_id_fields = ["user"]
     list_display = ["id", "user", "admin_message"]
 
-    preview_height = 200
+    PREVIEW_HEIGHT = 200
 
     fieldsets = (
         ('Main', {"fields": ("user",)},),

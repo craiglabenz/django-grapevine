@@ -61,7 +61,7 @@ CLASSIFIERS = [
 ]
 
 INSTALL_REQUIRES = [
-    "tablets==0.3.2",
+    "tablets==0.4.3",
     "html2text",
     "requests",
 ]

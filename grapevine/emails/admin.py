@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 
 # Local Apps
-from grapevine.admin_base import BaseModelAdmin, SendableAdminMixin
+from grapevine.admin.base import BaseModelAdmin, SendableAdminMixin
 from .models import Email, EmailRecipient, EmailBackend, EmailVariable, \
     RawEvent, Event, EmailEvent, UnsubscribedAddress
 
