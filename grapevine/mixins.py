@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 # Django
 from django.db import models
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.template import Context
 from django.template.loader import get_template
@@ -16,7 +17,6 @@ except ImportError:
 
 # 3rd Party
 import html2text
-from tablets.models import Template
 # from celery import shared_task
 
 # Local Apps
@@ -72,6 +72,13 @@ class SendableMixin(models.Model):
     @property
     def is_clicked(self):
         return self.is_sent and self.message.is_clicked
+
+    def get_absolute_url(self):
+        if not self.message:
+            # TODO: What to do here?
+            return ""
+        else:
+            return reverse("grapevine:view-on-site", kwargs={"message_guid": self.message.guid})
 
     @property
     @memoize
@@ -138,7 +145,8 @@ class SendableMixin(models.Model):
         override to correctly populate their template.
         """
         return {
-            'sendable': self
+            'sendable': self,
+            'view_on_site_uri': self.get_absolute_url(),
         }
 
     def get_context(self):

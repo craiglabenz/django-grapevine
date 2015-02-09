@@ -101,7 +101,8 @@ class EmailAdmin(BaseModelAdmin):
         'status', 'sent_at', 'is_test', 'communication_time', 'guid', 'admin_log', 'backend', 'text_excerpt', 'admin_html']
 
     def admin_html(self, obj):
-        return obj.html_body
+        url = reverse("grapevine:view-on-site", kwargs={"message_guid": obj.guid})
+        return """<iframe style="border:0; width:560px; height:500px; padding:10px 5%;" src="{}"></iframe>""".format(url)
     admin_html.short_description = 'HTML'
     admin_html.allow_tags = True
 

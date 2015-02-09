@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 # Local Apps
-from . import models
 from .jobs import async_process_events
 
 
@@ -15,6 +14,7 @@ def send_mail(subject, message, from_email, recipient_list, html_message='',
     Overrides Django's native ``send_mail`` function to add standard Grapevine
     functionality like unsubscribe honoring and DEBUG mode sending.
     """
+    from . import models
 
     email = models.Email.objects.create(
         subject=subject,

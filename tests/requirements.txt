@@ -1,7 +1,11 @@
 Django
 django-model-utils
+django-mptt
 django-suit
-South
 factory-boy
+html2text
+mock
+requests
+South
 sendgrid
-tablets==0.3.2
+tablets==0.4.5

@@ -117,7 +117,7 @@ class SendableAdminMixin(object):
 
         # Add our custom action
         label = "Detatch from {0}".format(self.message_type_verbose)
-        actions.insert(len(actions), label, [self.__class__.detatch_messages, label, label])
+        actions[label] = (self.__class__.detatch_messages, label, label,)
 
         return actions
 
@@ -158,11 +158,9 @@ class SendableAdminMixin(object):
     admin_message.short_description = 'Message'
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        context['PREVIEW_HEIGHT'] = getattr(self, "PREVIEW_HEIGHT", 300)
         if obj:
-            # Get the preview URL
-            view_name = 'admin:%s_render' % (self.admin_view_info,)
-            context['PREVIEW_HEIGHT'] = self.PREVIEW_HEIGHT
-            context['preview_url'] = reverse(view_name, args=(obj.pk,))
+            context['preview_url'] = "data:text/html;charset=utf-8," + obj.html_body
 
             # Add in the message type, for nice clarity across various types of transports
             context['message_type_verbose'] = self.message_type_verbose

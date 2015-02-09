@@ -199,15 +199,15 @@ class SendGridBackendTester(TestCase):
         message = self.email.backend.as_message(self.email)
 
         # to and ccs get merged into the same list, with SendGrid
-        self.assertEquals(len(message.data['to']), 3)
+        self.assertEquals(len(message.to), 3)
         # The NSA is BCC, not regular to
-        self.assertNotIn('NSA', str(message.data['to']))
+        self.assertNotIn('NSA', str(message.to))
 
         # The UUID should be passed as unique arg
-        self.assertIn(self.email.guid, message.data['unique_args'].values())
+        self.assertIn(self.email.guid, message.smtpapi.data['unique_args'].values())
 
         # Should have removed the unsubscribe link
-        self.assertEquals(message.data['filters']['subscriptiontrack']['settings']['enabled'], 0)
+        self.assertEquals(message.smtpapi.data['filters']['subscriptiontrack']['settings']['enabled'], 0)
 
 
 class UnsubscribedTester(TestCase):

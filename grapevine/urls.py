@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 import inspect
 
+# Django
+from django.conf.urls import include, url
+
 # Local Apps
 from .emails import backends
 
@@ -15,3 +18,6 @@ for attr_name in dir(backends):
             urlpatterns += backend.get_urls()
         except:
             pass
+
+
+urlpatterns.append(url(r"^", include("grapevine.emails.urls")))
