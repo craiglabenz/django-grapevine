@@ -16,7 +16,7 @@
             {% if from_email %}
                 <tr style="font-size:1.2em;">
                     <td><strong>From</strong>:</td>
-                    <td>{{ from_email }}</td>
+                    <td><code>{{ from_email }}</code></td>
                 </tr>
             {% elif error_from_email %}
                 <tr style="font-size:1.2em; color:red;">
@@ -28,7 +28,7 @@
             {% if reply_to %}
                 <tr style="font-size:1.2em;">
                     <td><strong>Reply To</strong>:</td>
-                    <td>{{ reply_to }}</td>
+                    <td><code>{{ reply_to }}</code></td>
                 </tr>
             {% elif error_reply_to %}
                 <tr style="font-size:1.2em; color:red;">

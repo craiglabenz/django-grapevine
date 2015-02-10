@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.safestring import mark_safe
 
 # Local Apps
 from grapevine.admin.base import BaseModelAdmin, SendableAdminMixin
@@ -37,7 +38,9 @@ class EmailableAdminMixin(SendableAdminMixin):
                 context['error_reply_to'] = "ERROR: Could not generate a `reply_to`. Does this template lack a value?"
 
             try:
-                context['from_email'] = obj.get_from_email()
+                val = obj.get_from_email()
+                val = val.replace("<", "&lt;").replace(">", "&gt;")
+                context['from_email'] = mark_safe(val)
             except ValueError as e:
                 context['error_from_email'] = "ERROR: %s" % (e.args[0],)
             except NotImplementedError:

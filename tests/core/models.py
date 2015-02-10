@@ -6,7 +6,7 @@ from django.db import models
 
 # 3rd Party
 from grapevine import generics
-from grapevine.models_base import GrapevineModel
+from grapevine.models.base import GrapevineModel
 from model_utils.managers import PassThroughManager
 
 # Local Apps

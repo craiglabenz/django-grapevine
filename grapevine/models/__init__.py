@@ -5,7 +5,6 @@ import traceback
 
 # Django
 from django.db import models
-from django.conf import settings
 from django.utils import timezone
 # from django.contrib.contenttypes.models import ContentType
 try:
@@ -19,7 +18,7 @@ except ImportError:
 import html2text
 
 # Local Apps
-from .models_base import GrapevineModel
+from .base import GrapevineModel
 
 
 class Transport(GrapevineModel):
@@ -159,30 +158,42 @@ class Transport(GrapevineModel):
                                     was a test.
         """
         initial_data = {
-            'type': sendable.content_type(),
+            'type': sendable.get_content_type(),
             'to': sendable._get_recipients(recipient_address),
-            'html_body': sendable.html_body,
-            'text_body': sendable.text_body,
             'status': cls.UNSENT,
             'is_test': is_test,
         }
-        initial_data = cls.finish_initial_data(sendable, initial_data, **kwargs)
-        transport = cls.objects.create(**initial_data)
 
-        # Save the link between sendable and message
+        # Must mint the transport and save it to the Sendable
+        # ASAP in case the Sendable needs it for rendering
+        transport = cls.objects.create(**initial_data)
         if not is_test:
-            sendable.message_id = transport.pk
+            # Save the link between sendable and message
+            sendable.message = transport
             sendable.save()
 
-        # Allow the Sendable object to make last second
-        # modifications to the Transport. This may include
-        # adding tags, altering attributes, etc.
+        # Do not render until **AFTER** ``sendable.message``
+        # has been set with the Transport because those details
+        # may be required for rendering.
+        transport.html_body = sendable.html_body
+        transport.text_body = sendable.text_body
+
+        should_resave = False
+        for key, value in cls.extra_transport_data(sendable, **kwargs).items():
+            should_resave = True
+            setattr(transport, key, value)
+
+        # Allow the Sendable object to make last second modifications to the
+        # Transport. This may include adding tags, altering attributes, etc.
         transport = sendable.alter_transport(transport, **kwargs)
+
+        if should_resave:
+            transport.save()
 
         return transport
 
     @staticmethod
-    def finish_initial_data(sendable, data, **kwargs):
+    def extra_transport_data(sendable, data, **kwargs):
         """
         Hook for using classes to optionally augment the initial data given
         to their Transport object.

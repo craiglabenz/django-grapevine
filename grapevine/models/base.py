@@ -30,7 +30,7 @@ class GrapevineModel(models.Model):
         return reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name,), args=(self.pk,))
 
     @classmethod
-    def content_type(cls):
+    def get_content_type(cls):
         return ContentType.objects.get_for_model(cls)
 
     @classmethod

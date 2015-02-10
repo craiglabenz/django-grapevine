@@ -81,7 +81,6 @@ class SendableMixin(models.Model):
             return reverse("grapevine:view-on-site", kwargs={"message_guid": self.message.guid})
 
     @property
-    @memoize
     def message(self):
         """
         A helper property to ease getting of the associated message.
@@ -113,7 +112,7 @@ class SendableMixin(models.Model):
         the sender process continually re-queuing it until actual delivery.
         """
         queued_message, created = gv_models.QueuedMessage.objects.\
-            get_or_create(message_type=self.content_type(), message_id=self.pk)
+            get_or_create(message_type=self.get_content_type(), message_id=self.pk)
         return queued_message
 
     def delete_from_queue(self):
@@ -123,7 +122,7 @@ class SendableMixin(models.Model):
         deleting the record from the real SQS queue.
         """
         gv_models.QueuedMessage.objects.\
-            filter(message_type=self.content_type(), message_id=self.pk).delete()
+            filter(message_type=self.get_content_type(), message_id=self.pk).delete()
 
     def default_scheduled_send_time(self):
         return timezone.now()

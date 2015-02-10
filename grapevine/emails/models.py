@@ -7,14 +7,13 @@ from django.utils import timezone, six, module_loading
 from django.core.mail import get_connection, EmailMultiAlternatives
 
 # 3rd Party
-import html2text
 # from celery import shared_task
 
 # Local Apps
 from utils import parse_email, EventRepo
 from managers import EmailManager, EmailRecipientManager
 from grapevine.decorators import memoize
-from grapevine.models_base import GrapevineModel
+from grapevine.models.base import GrapevineModel
 from grapevine.models import Transport
 from grapevine.settings import grapevine_settings
 
@@ -98,19 +97,19 @@ class Email(Transport):
         return key, backend
 
     @staticmethod
-    def finish_initial_data(sendable, initial_data, **kwargs):
-        initial_data.update({
+    def extra_transport_data(sendable, **kwargs):
+        extra_data = {
             'from_email': sendable.get_from_email(),
             'reply_to': sendable.get_reply_to(),
             'subject': sendable.get_subject(),
-        })
+        }
 
         # Honor a custom EmailBackend request
         key, backend = Email.determine_backend(**kwargs)
         if backend is not None:
-            initial_data[key] = backend
+            extra_data[key] = backend
 
-        return initial_data
+        return extra_data
 
     def add_tos(self, recipients):
         """

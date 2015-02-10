@@ -32,7 +32,7 @@ class RecipientsTester(TestCase):
     """
 
     def setUp(self):
-        self.em = Email.objects.create(type=models.WelcomeEmail.content_type())
+        self.em = Email.objects.create(type=models.WelcomeEmail.get_content_type())
 
     def test_add_to(self):
         """
@@ -101,7 +101,7 @@ class RecipientsTester(TestCase):
         Tests custom manager function
         """
         em = Email.objects.create(**{
-            'type': models.WelcomeEmail.content_type(),
+            'type': models.WelcomeEmail.get_content_type(),
             'html_body': "<p>Hi</p>",
             'to': {
                 'to': 'marco@polo.com',
@@ -132,7 +132,7 @@ class EmailSetUpTester(TestCase):
         self.ss = SomeSendable()
 
     def test_initial_backend_by_path(self):
-        initial_data = Email.finish_initial_data(self.ss, {}, backend=self.backend_path)
+        initial_data = Email.extra_transport_data(self.ss, backend=self.backend_path)
         self.assertIn('backend', initial_data.keys())
 
         # The above line should have created an EmailBackend record
@@ -143,7 +143,7 @@ class EmailSetUpTester(TestCase):
         backend = EmailBackend.objects.create(name='Console',
             path=self.backend_path)
 
-        initial_data = Email.finish_initial_data(self.ss, {}, backend=backend)
+        initial_data = Email.extra_transport_data(self.ss, backend=backend)
         self.assertIn('backend', initial_data.keys())
 
         # The above line should have created an EmailBackend record
@@ -154,7 +154,7 @@ class EmailSetUpTester(TestCase):
         backend = EmailBackend.objects.create(name='Console',
             path=self.backend_path)
 
-        initial_data = Email.finish_initial_data(self.ss, {}, backend_id=backend.pk)
+        initial_data = Email.extra_transport_data(self.ss, backend_id=backend.pk)
         self.assertIn('backend_id', initial_data.keys())
 
         # The above line should have created an EmailBackend record
@@ -162,7 +162,7 @@ class EmailSetUpTester(TestCase):
         self.assertEquals(EmailBackend.objects.first().path, self.backend_path)
 
     def test_add_variable(self):
-        em = Email.objects.create(type=models.WelcomeEmail.content_type())
+        em = Email.objects.create(type=models.WelcomeEmail.get_content_type())
         email_var = em.add_variable('some_key', 'some variable')
 
         self.assertEquals(EmailVariable.objects.filter(email=em).count(), 1)
@@ -177,7 +177,7 @@ class SendGridBackendTester(TestCase):
 
     def setUp(self):
         self.email = Email.objects.create(
-            type=models.WelcomeEmail.content_type(),
+            type=models.WelcomeEmail.get_content_type(),
             subject="LONG TIME NO SEE LOL",
             html_body="<p>What up homeslice?</p>",
             from_email="homeboy@gmail.com",

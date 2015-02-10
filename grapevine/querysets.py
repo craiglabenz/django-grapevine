@@ -21,7 +21,7 @@ class SendableQuerySet(QuerySet):
 
     def not_queued(self):
         message_ids = models.QueuedMessage.objects.\
-            filter(message_type=self.model.content_type).\
+            filter(message_type=self.model.get_content_type()).\
             values_list('message_id', flat=True)
 
         return self.exclude(pk__in=message_ids)
