@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 # Django
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 # Local Apps
 from grapevine.sender import ScheduledSendableSender

@@ -105,7 +105,13 @@ class EmailBackend(GrapevineEmailBackend):
         if bcc_recipients:
             data["bcc"] = ", ".join(bcc_recipients)
 
-        data["v:grapevine-guid"] = email_message._email.guid
+        try:
+            data["v:grapevine-guid"] = email_message._email.guid
+        except AttributeError:
+            # Emails delivered by non-Grapevine email backends are unlikely
+            # to have the ``_email`` attribute. But I ain't worried.
+            pass
+
         return data
 
     def post(self, email_message, data):

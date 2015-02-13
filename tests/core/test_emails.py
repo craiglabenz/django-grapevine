@@ -307,7 +307,7 @@ class GrapevineSenderTester(TestCase):
 
         from grapevine.sender import ScheduledSendableSender
         self.sender = ScheduledSendableSender()
-        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 1)
+        self.assertEquals(models.WelcomeEmail.objects.is_eligible().count(), 1)
 
     def test_sent_are_ineligible(self):
         """
@@ -316,7 +316,7 @@ class GrapevineSenderTester(TestCase):
         # Send an email
         self.sendable.send()
         # And now the sendable must be considered ineligible
-        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+        self.assertEquals(models.WelcomeEmail.objects.is_eligible().count(), 0)
 
     def test_queued_are_ineligible(self):
         """
@@ -325,7 +325,7 @@ class GrapevineSenderTester(TestCase):
         """
         self.sendable.denote_as_queued()
         # And now the sendable must be considered ineligible
-        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+        self.assertEquals(models.WelcomeEmail.objects.is_eligible().count(), 0)
 
     def test_future_messages_are_ineligible(self):
         """
@@ -335,7 +335,7 @@ class GrapevineSenderTester(TestCase):
         self.sendable.scheduled_send_time = (timezone.now() + datetime.timedelta(hours=1))
         self.sendable.save()
         # And now the sendable must be considered ineligible
-        self.assertEquals(self.sender.all_eligible_by_sendable(models.WelcomeEmail).count(), 0)
+        self.assertEquals(models.WelcomeEmail.objects.is_eligible().count(), 0)
 
     def test_base_send(self):
         """

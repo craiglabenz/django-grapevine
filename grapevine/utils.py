@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import re
 
 # Django
+from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render_to_response
 from django.template import Template, Context, RequestContext
 
@@ -28,3 +29,38 @@ def simple_render(string, context, should_raise=True, should_autoescape=True):
             raise ValueError("You failed to populate everything in `%s` !" % (string,))
 
     return string
+
+
+class ContentTypeRepo(object):
+    _instance = None
+    ct_map = {}
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Singleton implementation
+        """
+        if not cls._instance:
+            cls._instance = super(ContentTypeRepo, cls).__new__(cls, *args, **kwargs)
+            cls._instance.seed_ct_map()
+        return cls._instance
+
+    def seed_ct_map(self):
+        self.ct_map = {}
+        for ct in ContentType.objects.all():
+            self._instance.ct_map[ct.pk] = ct
+
+    def get_content_type_by_id(self, id):
+        return self.ct_map[id]
+
+    def get_class_by_id(self, id):
+        return self.get_content_type_by_id(id).model_class()
+
+
+def valid_content_types():
+    """
+    Returns an iterator of only valid content types, using the ContentType
+    lookup singleton above.
+    """
+    for pk, ct in ContentTypeRepo().ct_map.items():
+        if bool(ct.model_class()):
+            yield ct

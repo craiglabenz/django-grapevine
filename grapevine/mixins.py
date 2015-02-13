@@ -8,23 +8,20 @@ from django.utils import timezone
 from django.template import Context
 from django.template.loader import get_template
 from django.utils import six
-try:
-    # This is the 1.7 import
-    from django.contrib.contenttypes.fields import GenericRelation
-except ImportError:
-    # And this is the 1.6 import
-    from django.contrib.contenttypes.generic import GenericRelation
 
 # 3rd Party
 import html2text
-# from celery import shared_task
+
+try:
+    from celery import shared_task
+except ImportError:
+    shared_task = False
 
 # Local Apps
 from . import emails
 from . import models as gv_models
 from .managers import SendableManager
 from .querysets import SendableQuerySet
-from grapevine.decorators import memoize
 from grapevine.utils import simple_render
 
 
@@ -119,7 +116,7 @@ class SendableMixin(models.Model):
         """
         Once a message has passed through the queue and been delivered,
         we delete its QueuedMessage record. Note that this is *not* actually
-        deleting the record from the real SQS queue.
+        deleting the record from the real queue.
         """
         gv_models.QueuedMessage.objects.\
             filter(message_type=self.get_content_type(), message_id=self.pk).delete()
@@ -131,8 +128,7 @@ class SendableMixin(models.Model):
         """
         Assumes a traditional Django, file system-based template loader
         """
-        if template_name is None:
-            template_name = self.get_template_name()
+        template_name = template_name or self.get_template_name()
         return get_template(template_name)
 
     def get_template_name(self):
@@ -243,8 +239,7 @@ class SendableMixin(models.Model):
         """
         Gets ye some HTML
         """
-        if context is None:
-            context = self.get_context()
+        context = context or self.get_context()
 
         template = self.get_template(template_name)
         return self._render(template, context)
@@ -272,11 +267,12 @@ class SendableMixin(models.Model):
         return self.get_transport_class().from_sendable(self, recipient_address=recipient_address,
             is_test=is_test, **kwargs)
 
-    @staticmethod
-    # @shared_task(queue="sendables")
-    def async_send(cls, sendable_id, *args, **kwargs):
-        sendable = cls.objects.get(id=sendable_id)
-        return sendable.send(*args, **kwargs)
+    if shared_task:
+        @staticmethod
+        @shared_task()
+        def async_send(cls, sendable_id, *args, **kwargs):
+            sendable = cls.objects.get(id=sendable_id)
+            return sendable.send(*args, **kwargs)
 
     def send(self, recipient_address=None, is_test=False, **kwargs):
         """
