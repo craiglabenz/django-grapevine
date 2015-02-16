@@ -1,14 +1,5 @@
 from __future__ import unicode_literals
 
-# Django
-from django.contrib.contenttypes.models import ContentType
-
-# 3rd Party
-try:
-    from celery import shared_task
-except ImportError:
-    shared_task = False
-
 # Local Apps
 from grapevine.settings import grapevine_settings
 from grapevine.utils import valid_content_types
@@ -21,13 +12,6 @@ class ScheduledSendableSender(object):
     """
     def __init__(self):
         pass
-
-    if shared_task:
-        @staticmethod
-        @shared_task()
-        def async_deliver_messages():
-            sender = ScheduledSendableSender()
-            return sender.deliver_messages()
 
     def deliver_messages(self):
         from grapevine import mixins
