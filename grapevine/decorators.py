@@ -28,13 +28,13 @@ def memoize(fnc):
         class SomeClass(object):
             @memoize
             def get_title(self):
-                print "doing work!"
+                print("doing work!")
                 return "Jurassic Park"
 
             @property
             @memoize
             def favorite_trilogy(self):
-                print "doing property work!"
+                print("doing property work!")
                 return "Star Wars"
 
 

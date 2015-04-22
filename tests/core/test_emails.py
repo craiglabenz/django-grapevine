@@ -22,8 +22,8 @@ from grapevine.emails.models import Email, EmailRecipient, \
 import tablets
 
 # Local Apps
+from .factories import UserFactory, EmailFactory, SendGridEmailFactory
 from core import models
-from factories import UserFactory, EmailFactory, SendGridEmailFactory
 
 
 class RecipientsTester(TestCase):

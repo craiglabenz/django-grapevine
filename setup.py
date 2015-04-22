@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from setuptools import setup
+# from setuptools.command.test import test as TestCommand
 import os
 import re
 import sys
-from setuptools import setup
 
 
 # Borrowed from the infamous

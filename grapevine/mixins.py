@@ -5,7 +5,8 @@ from django.db import models
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils import timezone
-from django.template import Context
+from django.template import Context, Template
+from django.template.base import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import six
 
@@ -129,7 +130,11 @@ class SendableMixin(models.Model):
         Assumes a traditional Django, file system-based template loader
         """
         template_name = template_name or self.get_template_name()
-        return get_template(template_name)
+        try:
+            return get_template(template_name)
+        except TemplateDoesNotExist:
+            return Template("{} does not exist!".format(template_name))
+
 
     def get_template_name(self):
         raise NotImplementedError("%s failed to implemented `get_template_name`" % self.__class__.__name__)

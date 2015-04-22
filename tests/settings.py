@@ -18,7 +18,7 @@ INSTALLED_APPS = [
     'mptt',
 
     # Used for database templates
-    'tablets',
+    # 'tablets',
     'grapevine',
     'grapevine.emails',
 
@@ -51,17 +51,6 @@ DEFAULT_REPLY_TO = 'help@djangograpevine.com'
 DEFAULT_SUBJECT = 'Hello from Grapevine!'
 ######## END EMAIL CONFIGURATION
 
-
-######## TEMPLATES CONFIG
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'tablets.loaders.DatabaseLoader',
-)
-TEMPLATE_DIRS = (
-    BASE_DIR + '/grapevine',
-)
-######## END TEMPLATES CONFIG
 
 
 ######## SENDGRID CONFIGURATION

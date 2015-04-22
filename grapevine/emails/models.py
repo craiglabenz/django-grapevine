@@ -10,8 +10,8 @@ from django.core.mail import get_connection, EmailMultiAlternatives
 # from celery import shared_task
 
 # Local Apps
-from utils import parse_email, EventRepo
-from managers import EmailManager, EmailRecipientManager
+from .utils import parse_email, EventRepo
+from .managers import EmailManager, EmailRecipientManager
 from grapevine.decorators import memoize
 from grapevine.models.base import GrapevineModel
 from grapevine.models import Transport
@@ -315,7 +315,7 @@ class EmailBackend(GrapevineModel):
         This function is an opportunity for EMAIL_BACKENDs to hook in
         and create a Message object of its own designs.
         """
-        import backends
+        from . import backends
         is_grapevine_backend = issubclass(self.kls, backends.base.GrapevineEmailBackend)
         implements_as_message = hasattr(self.kls, 'as_message')
 
@@ -349,7 +349,7 @@ class EmailBackend(GrapevineModel):
         else:
             # The base implementation of this function works for Django's
             # ``EmailMessage`` class
-            import backends
+            from . import backends
             return backends.base.GrapevineEmailBackend.finalize_message(message)
 
     def send(self, email, fail_silently=False, **kwargs):
@@ -384,10 +384,10 @@ class EmailBackend(GrapevineModel):
 
         if not is_sent:
             if getattr(msg, "failure_reason", False):
-                print msg.failure_reason
+                print(msg.failure_reason)
                 email.append_to_log(msg.failure_reason)
             else:
-                print "no failure_reason"
+                print("no failure_reason")
 
         return is_sent
 

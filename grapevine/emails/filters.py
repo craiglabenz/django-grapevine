@@ -25,7 +25,7 @@ class OnSpecificDateListFilter(admin.FieldListFilter):
         return self.field_path + self.endswith
 
     def choices(self, cl):
-        for x in xrange(31):
+        for x in range(31):
             date = timezone.now()
             # By default, offer 15 days ago to 15 days from now
             date = date + datetime.timedelta(days=(x - 15))

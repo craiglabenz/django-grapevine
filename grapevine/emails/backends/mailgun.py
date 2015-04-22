@@ -5,7 +5,11 @@ import requests
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    try:
+        from StringIO import StringIO
+    except:
+        from io import StringIO
+
 
 # Django
 from django.conf import settings

@@ -10,7 +10,7 @@ from grapevine.models.base import GrapevineModel
 from model_utils.managers import PassThroughManager
 
 # Local Apps
-from querysets import WelcomeEmailQuerySet
+from .querysets import WelcomeEmailQuerySet
 
 
 class WelcomeEmail(generics.EmailSendable, GrapevineModel):
@@ -28,7 +28,7 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
         verbose_name_plural = "Welcome Emails"
 
     def __unicode__(self):
-        return "Welcome Email to {0}".format(self.user.__unicode__())
+        return "Welcome Email to {0}".format(self.user)
 
     def get_template_name(self):
         return "Welcome Email"
