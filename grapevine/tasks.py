@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from sender import ScheduledSendableSender
+from .sender import ScheduledSendableSender
 
 try:
     from celery import shared_task
