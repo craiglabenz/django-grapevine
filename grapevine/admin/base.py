@@ -82,7 +82,7 @@ class SendableInline(admin.TabularInline):
         transport_class_app_name = obj.get_transport_class()._meta.app_label
         transport_class_sluggy_name = obj.get_transport_class()._meta.verbose_name.lower().replace(' ', '_')
         url = reverse('admin:%s_%s_change' % (transport_class_app_name, transport_class_sluggy_name,), args=(obj.message_id,))
-        return '<a href="%s" target="_blank" style="text-decoration:none;">%s</a>' % (url, obj.message.__unicode__(),)
+        return '<a href="{url}" target="_blank" style="text-decoration:none;">{message}</a>'.format(url=url, message=str(obj.message),)
     admin_message.allow_tags = True
     admin_message.short_description = 'Message'
 
@@ -153,7 +153,7 @@ class SendableAdminMixin(object):
         transport_class_app_name = obj.get_transport_class()._meta.app_label
         transport_class_sluggy_name = obj.get_transport_class()._meta.verbose_name.lower().replace(' ', '_')
         url = reverse('admin:%s_%s_change' % (transport_class_app_name, transport_class_sluggy_name,), args=(obj.message_id,))
-        return '<a href="%s" target="_blank" style="text-decoration:none;">%s</a>' % (url, obj.message.__unicode__(),)
+        return '<a href="{url}" target="_blank" style="text-decoration:none;">{message}</a>'.format(url=url, message=str(obj.message),)
     admin_message.allow_tags = True
     admin_message.short_description = 'Message'
 
@@ -254,7 +254,7 @@ class SendableAdminMixin(object):
                 user_id=request.user.pk,
                 content_type_id=content_type_id,
                 object_id=obj.pk,
-                object_repr=obj.__unicode__(),
+                object_repr=str(obj),
                 action_flag=admin.models.CHANGE,
                 change_message='Sent %s Message Id: %s for %s Id: %s' % (message_beginning, obj.transport.pk, obj._meta.verbose_name, obj.pk,)
             )

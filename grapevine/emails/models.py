@@ -53,12 +53,12 @@ class Email(Transport):
         verbose_name = 'Email'
         verbose_name_plural = 'Emails'
 
-    def __unicode__(self):
+    def __str__(self):
         recipient = ''
 
         main_recipient = self.get_main_recipient()
         if main_recipient:
-            recipient = ' %s: ' % (main_recipient.__unicode__(),)
+            recipient = ' %s: ' % (main_recipient.__str__(),)
         if self.pk:
             return '%s (%s)' % (recipient, self.subject[:50],)
         else:
@@ -245,7 +245,7 @@ class EmailRecipient(GrapevineModel):
         verbose_name = 'Email Recipient'
         verbose_name_plural = 'Email Recipients'
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s: %s' % (self.email.pk, self.prepare_for_email(),)
 
     def prepare_for_email(self):
@@ -281,7 +281,7 @@ class EmailBackend(GrapevineModel):
     def kls(self):
         return module_loading.import_by_path(dotted_path=self.path)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.name:
             return self.name
         else:
@@ -419,11 +419,11 @@ class EmailVariable(GrapevineModel):
             ('key', 'value',),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         if self.value:
-            return "%s: %s %s" % (self.email.__unicode__(), self.key, self.value,)
+            return "%s: %s %s" % (self.email.__str__(), self.key, self.value,)
         else:
-            return "%s: %s" % (self.email.__unicode__(), self.key,)
+            return "%s: %s" % (self.email.__str__(), self.key,)
 
 
 class RawEvent(GrapevineModel):
@@ -477,7 +477,7 @@ class Event(GrapevineModel):
         verbose_name = "Event"
         verbose_name_plural = "Events"
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -493,8 +493,8 @@ class EmailEvent(GrapevineModel):
         verbose_name = "Email Event"
         verbose_name_plural = "Email Events"
 
-    def __unicode__(self):
-        return '%s Email Id: %s' % (self.event.__unicode__(), self.email_id,)
+    def __str__(self):
+        return '%s Email Id: %s' % (self.event.__str__(), self.email_id,)
 
 
 class UnsubscribedAddress(GrapevineModel):
@@ -508,7 +508,7 @@ class UnsubscribedAddress(GrapevineModel):
         verbose_name = "Unsubscribed Address"
         verbose_name_plural = "Unsubscribed Addresses"
 
-    def __unicode__(self):
+    def __str__(self):
         return self.address
 
     def save(self, *args, **kwargs):

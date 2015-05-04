@@ -27,11 +27,11 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
         verbose_name = "Welcome Email"
         verbose_name_plural = "Welcome Emails"
 
-    def __unicode__(self):
+    def __str__(self):
         return "Welcome Email to {0}".format(self.user)
 
     def get_template_name(self):
-        return "Welcome Email"
+        return "emails/welcome.html"
 
     def get_raw_subject(self):
         return "Welcome to Acme Inc, {{ sendable.user }}!"
