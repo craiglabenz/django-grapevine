@@ -1,6 +1,7 @@
 # Grapevine
 
-![Downloads](https://pypip.in/download/django-grapevine/badge.png "Downloads")
+[![PyPi version](https://pypip.in/v/django-grapevine/badge.png)](https://crate.io/packages/django-grapevine/)
+[![PyPi downloads](https://pypip.in/d/django-grapevine/badge.png)](https://crate.io/packages/django-grapevine/)
 
 Grapevine is a messaging system built in Django. App-specific classes that want to make use of Grapevine's internals should do so by using the pre-baked mixins and generics found in `/grapevine/mixins.py` and `/grapevine/generics.py`.
 
