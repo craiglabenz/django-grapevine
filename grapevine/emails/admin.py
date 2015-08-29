@@ -100,44 +100,53 @@ class EmailAdmin(BaseModelAdmin):
 
     # Everything is readonly because this table is inherently immutable.
     # It makes no sense to edit the records of that which has already happened.
-    readonly_fields = ['subject', 'html_body', 'text_body', 'from_email', 'reply_to', 'type', 'admin_text_full',
-        'status', 'sent_at', 'is_test', 'communication_time', 'guid', 'admin_log', 'backend', 'text_excerpt', 'admin_html']
+    readonly_fields = ['subject', 'html_body', 'text_body', 'from_email', 'reply_to', 'type', 'admin_text_body', 'is_real', 'admin_sendable',
+                       'status', 'sent_at', 'is_test', 'communication_time', 'guid', 'admin_log', 'backend', 'admin_html_body']
 
-    def admin_html(self, obj):
-        url = reverse("grapevine:view-on-site", kwargs={"message_guid": obj.guid})
-        return """<iframe style="border:0; width:560px; height:500px; padding:10px 5%;" src="{}"></iframe>""".format(url)
-    admin_html.short_description = 'HTML'
-    admin_html.allow_tags = True
+    # def admin_html_body(self, obj):
+    #     url = reverse("grapevine:view-on-site", kwargs={"message_guid": obj.guid})
+    #     return """<iframe style="border:0; width:560px; height:500px; padding:10px 5%;" src="{}"></iframe>""".format(url)
+    # admin_html_body.short_description = 'HTML'
+    # admin_html_body.allow_tags = True
 
-    def text_excerpt(self, obj):
-        return obj.text_body[:100]
-    text_excerpt.short_description = 'Text Excerpt'
+    def admin_html_body(self, obj):
+        return obj.html_body
+    admin_html_body.short_description = 'HTML'
+    admin_html_body.allow_tags = True
 
-    def admin_text_full(self, obj):
+    def admin_text_body(self, obj):
         return obj.text_body.replace('\n', '<br>')
-    admin_text_full.short_description = 'Text Body'
-    admin_text_full.allow_tags = True
+    admin_text_body.short_description = 'Text Body'
+    admin_text_body.allow_tags = True
 
     def admin_log(self, obj):
-        return '<pre>%s</pre>' % (obj.log,)
+        return '<pre>{}</pre>'.format(obj.log or '')
     admin_log.short_description = 'Log'
     admin_log.allow_tags = True
 
+    def admin_sendable(self, obj):
+        if obj.sendable:
+            return """<a href="{0}">{1}</a>""".format(obj.sendable.admin_url, obj.sendable.__unicode__())
+        return "--"
+    admin_sendable.short_description = "Sendable"
+    admin_sendable.allow_tags = True
+
     fieldsets = (
-        ('Message Quick View', {'fields':
-            ('subject', 'admin_html', 'text_excerpt', 'from_email', 'reply_to',)
+        ('Message Quick View', {
+            'fields': ('sent_at', 'subject', 'from_email', 'reply_to', 'admin_sendable',)
         },),
         ('Full Message', {
+            'fields': ('admin_html_body',)
+        },),
+        ('Other Data', {
             'classes': ('collapse',),
-            'fields': ('html_body', 'admin_text_full', 'admin_log',)
-        },),
-        ('Status', {'fields':
-            ('type', 'status', 'sent_at', 'is_test',)
-        },),
-        ('Stats', {'fields':
-            ('communication_time', 'guid', 'backend',)
+            'fields': ('type', 'is_real', 'communication_time', 'guid', 'backend', 'admin_log', 'admin_text_body',)
         },),
     )
+
+    def is_real(self, obj):
+        return not obj.is_test
+    is_real.short_description = "Real Message?"
 
 
 class EmailRecipientAdmin(BaseModelAdmin):
@@ -156,10 +165,10 @@ class EmailBackendAdmin(BaseModelAdmin):
 class RawEventAdmin(BaseModelAdmin):
 
     readonly_fields = ['backend', 'admin_detail_payload', 'processed_on', 'processed_in',
-        'is_queued', 'is_broken', 'remote_ip', 'created_at']
+                       'is_queued', 'is_broken', 'remote_ip', 'created_at']
 
     list_display = ['id', 'backend', 'admin_list_payload', 'processed_on', 'processed_in',
-        'remote_ip', 'created_at']
+                    'remote_ip', 'created_at']
 
     fieldsets = (
         ('Event',

@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 # Django
 from django.db import models
 from django.conf import settings
-from django.utils import timezone, six, module_loading
 from django.core.mail import get_connection, EmailMultiAlternatives
+from django.core.urlresolvers import reverse
+from django.utils import timezone, six, module_loading
 
 # 3rd Party
 # from celery import shared_task
@@ -42,9 +43,9 @@ class Email(Transport):
 
     """
     backend = models.ForeignKey('EmailBackend', blank=True)
-    from_email = models.CharField(max_length=255, db_index=True, default=settings.DEFAULT_FROM_EMAIL)
-    reply_to = models.EmailField(max_length=255, blank=True, default=settings.DEFAULT_REPLY_TO)
-    subject = models.CharField(max_length=255, default=settings.DEFAULT_SUBJECT)
+    from_email = models.CharField(max_length=255, db_index=True, default='')
+    reply_to = models.EmailField(max_length=255, blank=True, default='')
+    subject = models.CharField(max_length=255, default='')
 
     objects = EmailManager()
 
@@ -52,6 +53,21 @@ class Email(Transport):
         app_label = "emails"
         verbose_name = 'Email'
         verbose_name_plural = 'Emails'
+
+    def get_absolute_url(self):
+        return reverse("grapevine:view-on-site", kwargs={"message_guid": self.guid})
+
+    def ensure_from_email(self):
+        if not self.from_email:
+            self.from_email = settings.DEFAULT_FROM_EMAIL
+
+    def ensure_reply_to(self):
+        if not self.reply_to:
+            self.reply_to = settings.DEFAULT_REPLY_TO
+
+    def ensure_subject(self):
+        if not self.subject:
+            self.subject = settings.DEFAULT_SUBJECT
 
     def __str__(self):
         recipient = ''
@@ -76,6 +92,10 @@ class Email(Transport):
         return self.main_recipient
 
     def save(self, *args, **kwargs):
+        self.ensure_from_email()
+        self.ensure_reply_to()
+        self.ensure_subject()
+
         if not self.backend_id:
             self.backend, created = EmailBackend.objects.get_or_create(path=grapevine_settings.EMAIL_BACKEND)
 
@@ -266,11 +286,11 @@ class EmailRecipient(GrapevineModel):
 class EmailBackend(GrapevineModel):
     name = models.CharField(max_length=255)
     path = models.CharField(max_length=255, help_text="The dotted import path to this backend, in "
-                               "a structure that would satisfy settings.EMAIL_BACKEND.")
+                            "a structure that would satisfy settings.EMAIL_BACKEND.")
     username = models.CharField(max_length=255, blank=True, help_text="Depending on the provider, this "
-                               "may actually be an API key.")
+                                "may actually be an API key.")
     password = models.CharField(max_length=255, blank=True, help_text="Depending on the provider, this "
-                               "may actually be an API secret.")
+                                "may actually be an API secret.")
 
     class Meta:
         app_label = "emails"

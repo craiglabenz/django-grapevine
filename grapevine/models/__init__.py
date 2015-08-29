@@ -4,15 +4,9 @@ import time
 import traceback
 
 # Django
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils import timezone
-# from django.contrib.contenttypes.models import ContentType
-try:
-    # This is 1.7
-    from django.contrib.contenttypes.generic import GenericForeignKey
-except ImportError:
-    # This is the 1.6 import
-    from django.contrib.contenttypes.fields import GenericForeignKey
 
 # 3rd Party
 import html2text
@@ -48,7 +42,7 @@ class Transport(GrapevineModel):
     status = models.IntegerField(choices=STATUS_CHOICES, default=UNSENT, db_index=True)
     sent_at = models.DateTimeField(db_index=True, verbose_name='Sent At', null=True, default=None, blank=True)
     communication_time = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True, default=None,
-        verbose_name="Communication Time", help_text="In seconds")
+                                             verbose_name="Communication Time", help_text="In seconds")
     is_test = models.BooleanField(default=False, verbose_name='Is Test', db_index=True)
     guid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
     log = models.TextField(blank=True, null=True, default=None)

@@ -1,4 +1,4 @@
-Django
+Django==1.8.4
 django-model-utils
 django-mptt
 django-suit

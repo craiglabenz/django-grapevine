@@ -27,7 +27,7 @@ INSTALLED_APPS = [
 ]
 
 
-if django.VERSION < (1,7):
+if django.VERSION < (1, 7):
     INSTALLED_APPS += ("south",)
 
 
