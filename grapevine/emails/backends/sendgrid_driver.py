@@ -18,9 +18,9 @@ except ImportError:
 
 
 # Local Apps
+import grapevine
 from .base import GrapevineEmailBackend
 from grapevine.settings import grapevine_settings
-from grapevine.emails import models as email_models
 
 
 class EmailBackend(GrapevineEmailBackend):
@@ -59,7 +59,8 @@ class EmailBackend(GrapevineEmailBackend):
             else:
                 raise
 
-        self.driver = sendgrid.SendGridClient(self.username, self.password,
+        self.driver = sendgrid.SendGridClient(
+            self.username, self.password,
             # Don't pass ``not self.fail_silently`` here, as that triggers
             # Exceptions to be raised in the SendGrid code instead of just
             # returning the response, which we would strongly prefer.
@@ -98,7 +99,7 @@ class EmailBackend(GrapevineEmailBackend):
                 if variable.key in EmailBackend.SIMPLE_VARIABLE_MAP.keys():
                     sendgrid_key = EmailBackend.SIMPLE_VARIABLE_MAP[variable.key]
                     message.add_filter(sendgrid_key, 'enabled',
-                        int(variable.value))
+                                       int(variable.value))
                 elif variable.key[:4] == 'utm_':
                     message.add_filter('ganalytics', 'enabled', 1)
                     message.add_filter('ganalytics', variable.key, variable.value)
@@ -120,7 +121,7 @@ class EmailBackend(GrapevineEmailBackend):
         if 'reply-to' in django_message.extra_headers:
             initial_data['reply_to'] = django_message.extra_headers.pop('reply-to')
 
-        email = email_models.Email.objects.create(**initial_data)
+        email = grapevine.models.Email.objects.create(**initial_data)
 
         email.add_tos(django_message.to)
         email.add_ccs(django_message.cc)
@@ -174,14 +175,14 @@ class EmailBackend(GrapevineEmailBackend):
         self.get_logger().debug("Beginning async_process_events with limit=%s" % limit)
         try:
             # Get the backend obj
-            sendgrid_backend = email_models.EmailBackend.objects.filter(path="grapevine.emails.backends.SendGridEmailBackend")[0]
+            sendgrid_backend = grapevine.models.EmailBackend.objects.filter(path="grapevine.emails.backends.SendGridEmailBackend")[0]
         except IndexError:
             # If there's not even a SendGrid record in the DB then we haven't sent any emails
             # through it and we don't have to worry about processing events
             return None
 
         with transaction.atomic():
-            event_pks = email_models.RawEvent.objects.filter(
+            event_pks = grapevine.models.RawEvent.objects.filter(
                 backend=sendgrid_backend,
                 processed_on=None,
                 is_queued=False).exclude(is_broken=True).values_list('pk', flat=True)[:limit]
@@ -191,15 +192,15 @@ class EmailBackend(GrapevineEmailBackend):
             # of the queryset will re-run the query and return incorrect  records
             event_pks = [event_pk for event_pk in event_pks]
 
-            email_models.RawEvent.objects.filter(pk__in=event_pks).update(is_queued=True)
+            grapevine.models.RawEvent.objects.filter(pk__in=event_pks).update(is_queued=True)
 
         for event_pk in event_pks:
-            email_models.RawEvent.async_process.delay(event_pk)
+            grapevine.models.RawEvent.async_process.delay(event_pk)
 
     def process_event(self, raw_event):
         """
         Arguments:
-        @raw_event  {email_models.RawEvent}  That which we shall process.
+        @raw_event  {grapevine.models.RawEvent}  That which we shall process.
 
         Returns  (bool, float,)   Success flag, time_taken
         """
@@ -224,26 +225,26 @@ class EmailBackend(GrapevineEmailBackend):
             # Figure out which event it is that happened
             event_name = self.get_event(raw_event_dict['event'])
             try:
-                event_type = email_models.Event.objects.get(name=event_name)
-            except email_models.Event.DoesNotExist:
+                event_type = grapevine.models.Event.objects.get(name=event_name)
+            except grapevine.models.Event.DoesNotExist:
                 continue
 
             # To which email in our system does this correspond?
             try:
-                email = email_models.Email.objects.get(guid=guid)
-            except email_models.Email.DoesNotExist:
+                email = grapevine.models.Email.objects.get(guid=guid)
+            except grapevine.models.Email.DoesNotExist:
                 # Alarming, but not really anything to do.
                 # STOP DELETING RECORDS!
                 continue
 
             # Mint the event record
-            email_event, created = email_models.EmailEvent.objects.get_or_create(email=email,
-                event=event_type, raw_event=raw_event, happened_at=self.datetime_from_seconds(raw_event_dict['timestamp']))
+            email_event, created = grapevine.models.EmailEvent.objects.get_or_create(
+                email=email, event=event_type, raw_event=raw_event, happened_at=self.datetime_from_seconds(raw_event_dict['timestamp']))
 
             # Mark the email address as "Unsubscribed" if it's that kind of Event
             if event_type.should_stop_sending and raw_event_dict.get('email', None):
-                email_models.UnsubscribedAddress.objects.create(address=raw_event_dict['email'],
-                    email=email)
+                grapevine.models.UnsubscribedAddress.objects.create(
+                    address=raw_event_dict['email'], email=email)
 
             # Note the event in the Email's direct log
             email.append_to_log(json.dumps(raw_event_dict))

@@ -9,10 +9,11 @@ GRAPEVINE = {
 **Nod to Django Rest Framework's structured settings setup.**
 """
 from __future__ import unicode_literals
+import importlib
 
 # Django
 from django.conf import settings
-from django.utils import importlib, six
+from django.utils import six
 
 
 USER_SETTINGS = getattr(settings, 'GRAPEVINE', {})

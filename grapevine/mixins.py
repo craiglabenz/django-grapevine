@@ -6,7 +6,12 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.template import Context, Template
-from django.template.base import TemplateDoesNotExist
+try:
+    # >= 1.8
+    from django.template.base import TemplateDoesNotExist
+except ImportError:
+    # 1.9
+    from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import six
 

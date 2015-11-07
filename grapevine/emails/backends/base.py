@@ -9,8 +9,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 # Local Apps
+import grapevine
 from grapevine.settings import grapevine_settings
-from grapevine.emails import models as email_models
 from grapevine.emails.utils import parse_email
 
 
@@ -77,11 +77,11 @@ class GrapevineEmailBackend(BaseEmailBackend):
                 try:
                     # Remove any remaining unsubscribed emails
                     name, address = parse_email(recipient)
-                    unsubscribed = email_models.UnsubscribedAddress.objects.get(
+                    unsubscribed = grapevine.models.UnsubscribedAddress.objects.get(
                         address=address
                     )
                     indicies_to_pop.append(index)
-                except email_models.UnsubscribedAddress.DoesNotExist:
+                except grapevine.models.UnsubscribedAddress.DoesNotExist:
                     pass
 
             # Must loop over this list in reverse to not change
@@ -102,14 +102,14 @@ class GrapevineEmailBackend(BaseEmailBackend):
             return HttpResponse(status=405)
 
         try:
-            backend = email_models.EmailBackend.objects.filter(path=self.IMPORT_PATH)[0]
+            backend = grapevine.models.EmailBackend.objects.filter(path=self.IMPORT_PATH)[0]
         except IndexError:
-            backend = email_models.EmailBackend.objects.create(path=self.IMPORT_PATH)
+            backend = grapevine.models.EmailBackend.objects.create(path=self.IMPORT_PATH)
 
         # Pull out the payload from request.POST as per
         # https://docs.djangoproject.com/en/1.6/ref/request-response/#django.http.HttpRequest.POST
-        email_models.RawEvent.objects.create(backend=backend, payload=request.body,
-                                             remote_ip=request.META['REMOTE_ADDR'])
+        grapevine.models.RawEvent.objects.create(backend=backend, payload=request.body,
+                                                 remote_ip=request.META['REMOTE_ADDR'])
 
         # A 200 tells SendGrid we successfully accepted this event payload
         return HttpResponse(status=200)

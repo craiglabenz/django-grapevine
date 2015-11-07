@@ -43,9 +43,9 @@ class Email(Transport):
 
     """
     backend = models.ForeignKey('EmailBackend', blank=True)
-    from_email = models.CharField(max_length=255, db_index=True, default='')
+    from_email = models.CharField(max_length=255, db_index=True, blank=True, default='')
     reply_to = models.EmailField(max_length=255, blank=True, default='')
-    subject = models.CharField(max_length=255, default='')
+    subject = models.CharField(max_length=255, blank=True, default='')
 
     objects = EmailManager()
 
