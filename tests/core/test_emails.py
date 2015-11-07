@@ -19,7 +19,6 @@ from grapevine.settings import grapevine_settings
 from grapevine.emails.backends import MailGunEmailBackend
 from grapevine.emails.models import Email, EmailRecipient, \
     EmailBackend, EmailVariable, UnsubscribedAddress, RawEvent
-import tablets
 
 # Local Apps
 from .factories import UserFactory, EmailFactory, SendGridEmailFactory
@@ -287,7 +286,6 @@ class UnsubscribedTester(TestCase):
         self.assertEquals(RawEvent.objects.first().payload, payload)
 
 
-
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend')
 class GrapevineSenderTester(TestCase):
     """
@@ -297,8 +295,6 @@ class GrapevineSenderTester(TestCase):
 
     def setUp(self):
         super(GrapevineSenderTester, self).setUp()
-
-        tablets.models.Template.objects.create(name="Welcome Email", content="<h1>Welcome, {{ sendable.user }}!</h1>")
 
         self.user = get_user_model().objects.create(username="asadf", email="asdf@asdf.com")
         self.welcome_email = models.WelcomeEmail.objects.create(user=self.user)
@@ -369,10 +365,6 @@ class GrapevineSenderTester(TestCase):
 
 @override_settings(EMAIL_BACKEND="grapevine.emails.backends.MailGunEmailBackend")
 class MailgunTester(TestCase):
-
-    def setUp(self):
-        super(MailgunTester, self).setUp()
-        tablets.models.Template.objects.create(name="Welcome Email", content="<h1>Welcome, {{ sendable.user }}!</h1>")
 
     def test_base_send(self):
         user = UserFactory()

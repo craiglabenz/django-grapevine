@@ -299,7 +299,7 @@ class EmailBackend(GrapevineModel):
 
     @property
     def kls(self):
-        return module_loading.import_by_path(dotted_path=self.path)
+        return module_loading.import_string(dotted_path=self.path)
 
     def __str__(self):
         if self.name:

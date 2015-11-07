@@ -5,6 +5,7 @@ import traceback
 
 # Django
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
@@ -36,7 +37,7 @@ class Transport(GrapevineModel):
         (UNSUBSCRIBED, 'Unsubscribed',),
     )
 
-    type = models.ForeignKey('contenttypes.ContentType', blank=True, null=True, default=None)
+    type = models.ForeignKey(ContentType, blank=True, null=True, default=None)
     html_body = models.TextField(blank=True)
     text_body = models.TextField(blank=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=UNSENT, db_index=True)
@@ -201,7 +202,7 @@ class QueuedMessage(GrapevineModel):
     subsequently deleted when the message is ultimately sent.
     """
 
-    message_type = models.ForeignKey('contenttypes.ContentType', verbose_name="Message Type")
+    message_type = models.ForeignKey(ContentType, verbose_name="Message Type")
     message_id = models.PositiveIntegerField(verbose_name="Message Id")
 
     message = GenericForeignKey('message_type', 'message_id')

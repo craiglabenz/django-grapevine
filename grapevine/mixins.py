@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 # Django
+import django
 from django.db import models
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -258,7 +259,10 @@ class SendableMixin(models.Model):
         """
         Override hook for child classes.
         """
-        return template.render(Context(context))
+        if django.VERSION < (1, 8):
+            return template.render(Context(context))
+        else:
+            return template.render(context)
 
     def alter_transport(self, transport, **kwargs):
         """
@@ -274,7 +278,8 @@ class SendableMixin(models.Model):
         raise NotImplementedError("%s class failed to implement ``get_transport_class``" % (self.__name__.__class__,))
 
     def as_transport(self, recipient_address=None, is_test=False, **kwargs):
-        return self.get_transport_class().from_sendable(self, recipient_address=recipient_address,
+        return self.get_transport_class().from_sendable(
+            self, recipient_address=recipient_address,
             is_test=is_test, **kwargs)
 
     if shared_task:
@@ -316,66 +321,67 @@ class SendableMixin(models.Model):
         return True
 
 
-class TemplateSendableMixin(SendableMixin):
-    """
-    Exactly the same as the SendableMixin, except for how the message's
-    actual content is determined.
-    """
-    template = models.ForeignKey('tablets.Template', blank=True, default=None, null=True)
-
-    class Meta(SendableMixin.Meta):
-        abstract = True
-
-    def get_template_name(self):
-        return self.template.name
-
-    def get_raw_subject(self):
-        if self.template.subject:
-            return self.template.subject
-        else:
-            return super(TemplateSendableMixin, self).get_raw_subject()
-
-    def get_raw_reply_to(self):
-        reply_to = None
-
-        # First ask the template for ``reply_to``
-        if self.template:
-            reply_to = self.template.reply_to
-
-        # If the Template opted out, ask the model instance
-        if not reply_to:
-            reply_to = super(TemplateSendableMixin, self).get_raw_reply_to()
-
-        # Lastly, fall back to the settings
-        if not reply_to:
-            reply_to = settings.DEFAULT_REPLY_TO
-
-        return reply_to
-
-    def get_raw_from_email(self):
-        from_email = None
-
-        # First ask the template for ``from_email``
-        if self.template:
-            from_email = self.template.from_email
-
-        # If the Template opted out, ask the model instance
-        if not from_email:
-            from_email = super(TemplateSendableMixin, self).get_raw_from_email()
-
-        # Lastly, fall back to the settings
-        if not from_email:
-            from_email = settings.DEFAULT_FROM_EMAIL
-
-        return from_email
-
-    def get_template(self, template_name=None):
+if 'tablets' in settings.INSTALLED_APPS:
+    class TemplateSendableMixin(SendableMixin):
         """
-        For duck-typing purposes, this function must accept the ``template_name``
-        param, though it makes no sense to do anything with it. We have a hard
-        foreign key reference to a template record, and we will use that.
+        Exactly the same as the SendableMixin, except for how the message's
+        actual content is determined.
         """
-        return self.template.as_template()
+        template = models.ForeignKey('tablets.Template', blank=True, default=None, null=True)
+
+        class Meta(SendableMixin.Meta):
+            abstract = True
+
+        def get_template_name(self):
+            return self.template.name
+
+        def get_raw_subject(self):
+            if self.template.subject:
+                return self.template.subject
+            else:
+                return super(TemplateSendableMixin, self).get_raw_subject()
+
+        def get_raw_reply_to(self):
+            reply_to = None
+
+            # First ask the template for ``reply_to``
+            if self.template:
+                reply_to = self.template.reply_to
+
+            # If the Template opted out, ask the model instance
+            if not reply_to:
+                reply_to = super(TemplateSendableMixin, self).get_raw_reply_to()
+
+            # Lastly, fall back to the settings
+            if not reply_to:
+                reply_to = settings.DEFAULT_REPLY_TO
+
+            return reply_to
+
+        def get_raw_from_email(self):
+            from_email = None
+
+            # First ask the template for ``from_email``
+            if self.template:
+                from_email = self.template.from_email
+
+            # If the Template opted out, ask the model instance
+            if not from_email:
+                from_email = super(TemplateSendableMixin, self).get_raw_from_email()
+
+            # Lastly, fall back to the settings
+            if not from_email:
+                from_email = settings.DEFAULT_FROM_EMAIL
+
+            return from_email
+
+        def get_template(self, template_name=None):
+            """
+            For duck-typing purposes, this function must accept the ``template_name``
+            param, though it makes no sense to do anything with it. We have a hard
+            foreign key reference to a template record, and we will use that.
+            """
+            return self.template.as_template()
 
 
 class Emailable(object):

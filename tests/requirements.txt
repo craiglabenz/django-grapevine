@@ -1,6 +1,5 @@
 django==1.9b1
 django-model-utils
-django-mptt
 django-suit
 factory-boy
 html2text

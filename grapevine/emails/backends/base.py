@@ -77,11 +77,11 @@ class GrapevineEmailBackend(BaseEmailBackend):
                 try:
                     # Remove any remaining unsubscribed emails
                     name, address = parse_email(recipient)
-                    unsubscribed = grapevine.models.UnsubscribedAddress.objects.get(
+                    unsubscribed = grapevine.emails.models.UnsubscribedAddress.objects.get(
                         address=address
                     )
                     indicies_to_pop.append(index)
-                except grapevine.models.UnsubscribedAddress.DoesNotExist:
+                except grapevine.emails.models.UnsubscribedAddress.DoesNotExist:
                     pass
 
             # Must loop over this list in reverse to not change
@@ -102,14 +102,15 @@ class GrapevineEmailBackend(BaseEmailBackend):
             return HttpResponse(status=405)
 
         try:
-            backend = grapevine.models.EmailBackend.objects.filter(path=self.IMPORT_PATH)[0]
+            backend = grapevine.emails.models.EmailBackend.objects.filter(path=self.IMPORT_PATH)[0]
         except IndexError:
-            backend = grapevine.models.EmailBackend.objects.create(path=self.IMPORT_PATH)
+            backend = grapevine.emails.models.EmailBackend.objects.create(path=self.IMPORT_PATH)
 
         # Pull out the payload from request.POST as per
         # https://docs.djangoproject.com/en/1.6/ref/request-response/#django.http.HttpRequest.POST
-        grapevine.models.RawEvent.objects.create(backend=backend, payload=request.body,
-                                                 remote_ip=request.META['REMOTE_ADDR'])
+        grapevine.emails.models.RawEvent.objects.create(
+            backend=backend, payload=request.body,
+            remote_ip=request.META['REMOTE_ADDR'])
 
         # A 200 tells SendGrid we successfully accepted this event payload
         return HttpResponse(status=200)
