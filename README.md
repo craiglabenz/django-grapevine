@@ -31,6 +31,9 @@ INSTALLED_APPS = (
     ...
 )
 ```
+
+> `django-grapevine` supports Django 1.9
+
 ---
 
 ### Usage
@@ -230,4 +233,3 @@ class HipChat(Transport):
         data['field_specific_to_hipchat'] = sendable.get_something_i_need()
         return data
 ```
-
