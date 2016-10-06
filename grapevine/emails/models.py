@@ -11,9 +11,9 @@ from django.utils import timezone, six, module_loading
 # from celery import shared_task
 
 # Local Apps
-from .utils import parse_email, EventRepo
-from .managers import EmailManager, EmailRecipientManager
 from grapevine.decorators import memoize
+from grapevine.emails.utils import parse_email, EventRepo
+from grapevine.emails.managers import EmailManager, EmailRecipientManager
 from grapevine.models.base import GrapevineModel
 from grapevine.models import Transport
 from grapevine.settings import grapevine_settings

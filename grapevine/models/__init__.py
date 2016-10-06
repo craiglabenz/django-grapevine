@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 import uuid
 import time
 import traceback
@@ -13,7 +14,7 @@ from django.utils import timezone
 import html2text
 
 # Local Apps
-from .base import GrapevineModel
+from grapevine.models.base import GrapevineModel
 
 
 class Transport(GrapevineModel):

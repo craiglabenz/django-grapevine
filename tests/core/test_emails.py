@@ -24,6 +24,11 @@ from grapevine.emails.models import Email, EmailRecipient, \
 from .factories import UserFactory, EmailFactory, SendGridEmailFactory
 from core import models
 
+try:
+    import sendgrid
+except ImportError:
+    sendgrid = None
+
 
 class RecipientsTester(TestCase):
     """
@@ -168,45 +173,48 @@ class EmailSetUpTester(TestCase):
         self.assertEquals(EmailVariable.objects.last().pk, email_var.pk)
 
 
-class SendGridBackendTester(TestCase):
-    """
-    The SendGrid EMAIL_BACKEND provides a Django-friendly wrapper
-    around the raw SendGrid python library.
-    """
-
-    def setUp(self):
-        self.email = Email.objects.create(
-            type=models.WelcomeEmail.get_content_type(),
-            subject="LONG TIME NO SEE LOL",
-            html_body="<p>What up homeslice?</p>",
-            from_email="homeboy@gmail.com",
-            reply_to="homeboy@gmail.com",
-            # This line is of particular import
-            backend="grapevine.emails.backends.SendGridEmailBackend",
-            to={
-                'to': ['marco@polo.com'],
-                'cc': ['Meat Chicken <meat@chicken.com>', 'Denard Robinson <denardr@umich.edu>'],
-                'bcc': 'The NSA <alerts@nsa.gov>'  # Haha, suckas
-            }
-        )
-        self.email.add_variable('should_show_unsubscribe_link', 0)
-
-    def test_message_building(self):
+# TODO: Break this out of `django-grapevine` proper and into its
+# own extension
+if sendgrid:
+    class SendGridBackendTester(TestCase):
         """
-        Make sure the SendGrid EMAIL_BACKEND builds a complete message.
+        The SendGrid EMAIL_BACKEND provides a Django-friendly wrapper
+        around the raw SendGrid python library.
         """
-        message = self.email.backend.as_message(self.email)
 
-        # to and ccs get merged into the same list, with SendGrid
-        self.assertEquals(len(message.to), 3)
-        # The NSA is BCC, not regular to
-        self.assertNotIn('NSA', str(message.to))
+        def setUp(self):
+            self.email = Email.objects.create(
+                type=models.WelcomeEmail.get_content_type(),
+                subject="LONG TIME NO SEE LOL",
+                html_body="<p>What up homeslice?</p>",
+                from_email="homeboy@gmail.com",
+                reply_to="homeboy@gmail.com",
+                # This line is of particular import
+                backend="grapevine.emails.backends.SendGridEmailBackend",
+                to={
+                    'to': ['marco@polo.com'],
+                    'cc': ['Meat Chicken <meat@chicken.com>', 'Denard Robinson <denardr@umich.edu>'],
+                    'bcc': 'The NSA <alerts@nsa.gov>'  # Haha, suckas
+                }
+            )
+            self.email.add_variable('should_show_unsubscribe_link', 0)
 
-        # The UUID should be passed as unique arg
-        self.assertIn(self.email.guid, message.smtpapi.data['unique_args'].values())
+        def test_message_building(self):
+            """
+            Make sure the SendGrid EMAIL_BACKEND builds a complete message.
+            """
+            message = self.email.backend.as_message(self.email)
 
-        # Should have removed the unsubscribe link
-        self.assertEquals(message.smtpapi.data['filters']['subscriptiontrack']['settings']['enabled'], 0)
+            # to and ccs get merged into the same list, with SendGrid
+            self.assertEquals(len(message.to), 3)
+            # The NSA is BCC, not regular to
+            self.assertNotIn('NSA', str(message.to))
+
+            # The UUID should be passed as unique arg
+            self.assertIn(self.email.guid, message.smtpapi.data['unique_args'].values())
+
+            # Should have removed the unsubscribe link
+            self.assertEquals(message.smtpapi.data['filters']['subscriptiontrack']['settings']['enabled'], 0)
 
 
 class UnsubscribedTester(TestCase):
@@ -246,26 +254,9 @@ class UnsubscribedTester(TestCase):
         self.assertEquals(len(message.bcc), 1)
         self.assertIn('you@canemailme.com', message.bcc[0])
 
-    def test_sendgrid_email(self):
-        email = SendGridEmailFactory()
-        email.add_recipients = email.add_recipients(self.mixed_recipients)
-
-        message = email.backend.as_message(email)
-        message = email.backend.finalize_message(message)
-
-        self.assertEquals(len(message.to), 3)
-        self.assertIn('miguel@polio.com', message.to[0])
-
-        self.assertEquals(len(message.bcc), 1)
-        self.assertIn('you@canemailme.com', message.bcc[0])
-
     def test_standard_all_unsubscribed(self):
         self._all_unsubscribed(EmailFactory(), self.single_all_unsubscribed_recipients)
         self._all_unsubscribed(EmailFactory(), self.multiple_all_unsubscribed_recipients)
-
-    def test_sendgrid_all_unsubscribed(self):
-        self._all_unsubscribed(SendGridEmailFactory(), self.single_all_unsubscribed_recipients)
-        self._all_unsubscribed(SendGridEmailFactory(), self.multiple_all_unsubscribed_recipients)
 
     def _all_unsubscribed(self, email, recipients):
         email.add_recipients(recipients)
@@ -275,15 +266,35 @@ class UnsubscribedTester(TestCase):
 
         self.assertEquals(len(message.to), 0)
 
-    def test_webhook_acceptor(self):
-        payload = '{"category":["category1","category2","category3"], "unique_args":{"uid":"123456", "purchase":"PO1452297845", "id":"001"}}'
+    # TODO: Move this out of `django-grapevine` proper and
+    # into its own extension
+    if sendgrid:
+        def test_sendgrid_email(self):
+            email = SendGridEmailFactory()
+            email.add_recipients = email.add_recipients(self.mixed_recipients)
 
-        url = reverse('grapevine:sendgrid-events-webhook')
+            message = email.backend.as_message(email)
+            message = email.backend.finalize_message(message)
 
-        resp = self.client.post(url, data=payload, content_type="application/json")
-        self.assertEquals(resp.status_code, 200)
+            self.assertEquals(len(message.to), 3)
+            self.assertIn('miguel@polio.com', message.to[0])
 
-        self.assertEquals(RawEvent.objects.first().payload, payload)
+            self.assertEquals(len(message.bcc), 1)
+            self.assertIn('you@canemailme.com', message.bcc[0])
+
+        def test_sendgrid_all_unsubscribed(self):
+            self._all_unsubscribed(SendGridEmailFactory(), self.single_all_unsubscribed_recipients)
+            self._all_unsubscribed(SendGridEmailFactory(), self.multiple_all_unsubscribed_recipients)
+
+        def test_webhook_acceptor(self):
+            payload = '{"category":["category1","category2","category3"], "unique_args":{"uid":"123456", "purchase":"PO1452297845", "id":"001"}}'
+
+            url = reverse('grapevine:sendgrid-events-webhook')
+
+            resp = self.client.post(url, data=payload, content_type="application/json")
+            self.assertEquals(resp.status_code, 200)
+
+            self.assertEquals(RawEvent.objects.first().payload, payload)
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.dummy.EmailBackend')

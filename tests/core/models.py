@@ -27,7 +27,7 @@ class WelcomeEmail(generics.EmailSendable, GrapevineModel):
         verbose_name = "Welcome Email"
         verbose_name_plural = "Welcome Emails"
 
-    def __str__(self):
+    def as_str(self):
         return "Welcome Email to {0}".format(self.user)
 
     def get_template_name(self):

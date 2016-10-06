@@ -2,13 +2,34 @@ from __future__ import unicode_literals
 import json
 
 # Django
-from django.db import models, transaction
-from django.core.urlresolvers import reverse
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
+from django.db import models, transaction
 from django.utils import timezone
 
 
-class GrapevineModel(models.Model):
+try:
+    from termcolor import cprint as _cprint, colored
+except ImportError:
+    def _cprint(msg, *args, **kwargs):
+        print(msg)
+
+    def colored(msg, *args, **kwargs):
+        return msg
+
+
+def cprint(msg, *args, **kwargs):
+    if settings.TESTING:
+        return
+
+    if settings.DEBUG:
+        _cprint(msg, *args, **kwargs)
+    else:
+        pass
+
+
+class GrapevineTimeKeepingModel(models.Model):
 
     # Bookkeeping
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,6 +37,56 @@ class GrapevineModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class GrapevineLogicModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def __unicode__(self):
+        '''Python 2.7 friendliess'''
+        return self.as_str()
+
+    def __str__(self):
+        '''
+        Designed to provide a safe fallback for getting a simple
+        string representation of a model.
+
+        Written after one too many career experiences with 500ing
+        admin pages because a field in the `__str__` method was
+        unexpectedly blank.
+        '''
+        try:
+            return self.as_str()
+        except Exception as e:
+            if settings.DEBUG:
+                cprint("__str__ error {}".format(e), color="red")
+            return self.as_str_fallback()
+
+    def as_str_fallback(self):
+        if self.pk:
+            return '{} Id: {}'.format(self._meta.verbose_name, self.pk)
+        else:
+            return "Unsaved {}".format(self._meta.verbose_name)
+
+    def as_str(self):
+        """
+        Classes extending BaseModel are encouraged to implement ``as_str``
+        instead of ``__str__`` to prevent any accidental data mismatching
+        from ever breaking production functionality.
+        """
+        name = getattr(self, self.AS_STR_FIELD, None)
+
+        if not name:
+            getter = getattr(self, 'get_{}'.format(self.AS_STR_FIELD), None)
+            if getter:
+                name = getter()
+
+        if not name:
+            raise ValueError("Could not generate `{}` for {}".format(self.AS_STR_FIELD, self.as_str_fallback()))
+
+        return name
 
     @property
     def meta_info(self):
@@ -32,70 +103,6 @@ class GrapevineModel(models.Model):
     @classmethod
     def get_content_type(cls):
         return ContentType.objects.get_for_model(cls)
-
-    @classmethod
-    def field_names(cls):
-        """
-        Returns the names of all fields on the model
-        """
-        return [field.name for field in cls._meta.fields]
-
-    def finalize_serialization(self, serialized, strip_empty=False):
-        """
-        A hook for child classes to do more phun stuff.
-        """
-        if strip_empty:
-            for key, value in serialized.items():
-                if value is None or (isinstance(value, dict) and value['id'] is None):
-                    serialized.pop(key)
-        return serialized
-
-    def serialize(self, full=False, id_nested=False, strip_empty=False, excludes=[]):
-        """
-        Returns a dictionary of all local fields.
-        """
-        serialized = {field.name: self.get_field_value(field.name, full) for field in self.__class__._meta.fields if field.name not in excludes}
-        return self.finalize_serialization(serialized, strip_empty=strip_empty)
-
-    def get_field_value(self, field_name, full=False):
-        """
-        Returns a given value of for this instantiated model.
-
-        Arguments:
-        field_name    {string}      The value of the attr you want
-        full          {bool}        OPTIONAL. If the passed name is a relation, should it be hydrated?
-                                    Defaults to False.
-        """
-        field = self._meta.get_field(field_name)
-        # Is this a related field or a literal?
-        if isinstance(field, models.fields.related.RelatedField):
-            if full:
-                # It's related and they ordered it hydrated
-                val = getattr(self, field_name, None)
-                # Pull out the value and hydrate it if it exists, else
-                # return None
-                if val is not None:
-                    return val.field_values()  # Don't forward `full` to avoid cyclical problems
-                else:
-                    return None
-            else:
-                # Not hydrated is easy enough, just return the PK we
-                # already have on hand
-                _id = getattr(self, '%s_id' % (field_name,), None)
-                return {'id': _id}
-        elif isinstance(field, models.fields.DateField):  # Covers both DateTimeField and DateField
-            return self._meta.get_field(field_name).value_to_string(self)
-        else:
-            # Not related? Too easy.
-            return getattr(self, field_name, None)
-
-    def reload(self):
-        """
-        In place DB update of the record.
-        """
-        new_self = self.__class__.objects.get(pk=self.pk)
-        self.__dict__.update(new_self.__dict__)
-        return self
 
     def append_to_log(self, log, should_save=True, desc=None, should_use_transaction=True,
                       should_reload=True):
@@ -141,3 +148,9 @@ class GrapevineModel(models.Model):
             self.save()
 
         return self
+
+
+class GrapevineModel(GrapevineLogicModel, GrapevineTimeKeepingModel):
+
+    class Meta:
+        abstract = True

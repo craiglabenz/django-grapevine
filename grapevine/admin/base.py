@@ -33,7 +33,7 @@ class BaseModelAdmin(admin.ModelAdmin):
     def additional_object_tools(self, obj):
         tool_urls = []
         excludes = self.get_additional_object_tool_excludes(obj)
-        for relationship in obj._meta.get_all_related_objects():
+        for relationship in obj._meta.related_objects:
             # Skip all excludes
             if relationship.get_accessor_name() in excludes:
                 continue
