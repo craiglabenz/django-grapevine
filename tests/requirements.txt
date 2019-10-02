@@ -1,4 +1,4 @@
-django==1.10.2
+django==1.11.23
 django-extensions
 django-model-utils
 django-suit
